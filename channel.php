@@ -104,8 +104,8 @@
                         . $row['timestamp'] .
                       "</div>
                       <!--<div class=\"mdl-card__actions\">-->
-                        <a href=\"post.php?=". $row['id'] ."\" class=\"mdl-button\">LIKE</a>
-                        <a href=\"post.php?=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
+                        <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">LIKE</a>
+                        <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
                       </div>
                     </div>";
             }
