@@ -1,19 +1,33 @@
 <?php
-  $_config = parse_ini_file("../php_files/config.php.ini");
-  $mysqli = new mysqli("localhost", $_config['mysqluser'], $_config['mysqlpass'], $_config['mysqlDB']);
-  $_ch = isset($_GET['ch']) ? $_GET['ch'] : "all";
+  include'php/header.php';
+  $_posting = isset($_GET['new']);
+  $_postid = $_GET['post'];
 
-  $qry =
-    "SELECT USERS.username, POSTS.id, POSTS.message, POSTS.timestamp, CHANNELS.name
-      FROM (CHANNELS INNER JOIN POSTS
-         ON POSTS.channel = CHANNELS.id ) INNER JOIN USERS
-           ON USERS.id = POSTS.owner
-           WHERE POSTS.id = '" . $mysqli->escape_string($_GET['post']) . "'
-           ORDER BY timestamp DESC";
-  //echo $qry;
-  $stmt = $mysqli->query($qry);
-  $stmt->data_seek(0);
-  $row = $stmt->fetch_assoc();
+  if(!empty($_POST['dest']) && !empty($_POST['postContent']) && $_loggedIn){
+    $_posting = false;
+    $queryChannelId->bind_param("s", $_POST['dest']);
+    $queryChannelId->execute();
+    $resCh = $queryChannelId->get_result();
+    $rowCh = $resCh->fetch_assoc();
+    if(isset($rowCh)){
+      $insertPost->bind_param("sss", $_SESSION['userID'], $rowCh['id'], $_POST['postContent']);
+      if($insertPost->execute()){
+        $newPost = $mysqli->query("SELECT LAST_INSERT_ID() AS id;")->fetch_assoc();
+        $_postid = $newPost['id'];
+        //echo "<script>document.location = \"post.php?post=" . $newPost['id'] . "\"</script>";
+      }else{
+        $error = "Could not create post!";
+      }
+    }else{
+      $error = "Channel does not exist!";
+    }
+  }
+  if(!$_posting){
+    $queryPost->bind_param("is", $userId, $_postid);
+    $queryPost->execute();
+    $res = $queryPost->get_result();
+    $row = $res->fetch_assoc();
+  }
  ?>
 <!doctype html>
 <html lang="en">
@@ -22,7 +36,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="A front-end template that helps you build fast, modern mobile web apps.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <title> <?php echo $_ch ?> | chirper </title>
+    <title> post | chirper </title>
 
     <!-- Add to homescreen for Chrome on Android -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -47,6 +61,7 @@
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/material.min.css" />
     <link rel="stylesheet" href="css/custom.css" />
     <link rel="stylesheet" href="css/hoover.css" />
@@ -62,25 +77,36 @@
       z-index: 900;
     }
     </style>
+    <script src="js/like.js"></script>
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
       <header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
         </div>
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
-          <h3>chirper</h3>
+        <div class="mdl-layout--large-screen-only mdl-layout__header-row hvr-forward">
+          <h3><a href="index.php">chirper</a></h3>
         </div>
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
         </div>
         <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--primary-dark">
+          <span class="mdl-layout__tab" id="current-channel"> Post </span>
           <?php
-          $subs_qry = "SELECT * FROM CHANNELS WHERE is_default = true";
-          $subs_st = $mysqli->query($subs_qry);
-          $subs_st->data_seek(0);
-          echo "<a href=\"channel.php?ch=" . $_ch . "\" class=\"mdl-layout__tab\" id=\"current-channel\">#" . $_ch . "</a>";
-          while($rowh = $subs_st->fetch_assoc()){
-            echo "<a href=\"channel.php?ch=" . $rowh['name'] . "\" class=\"mdl-layout__tab\">#". $rowh['name'] . "</a>";
+          if(!$_loggedIn){
+            $queryDefaultChannels->execute();
+            $res = $queryDefaultChannels->get_result();
+            while($rowCh = $res->fetch_assoc()){
+              echo "<a href=\"channel.php?ch=" . $rowCh['name'] . "\" class=\"mdl-layout__tab\">#". $rowCh['name'] . "</a>";
+            }
+            echo "
+              <div style=\"width: 100%;\">
+                <a href=\"login.php\" class=\"mdl-layout__tab login-button\">LOGIN</a>
+              </div>";
+          }else{
+            echo "
+              <div style=\"width: 100%;\">
+                <a href=\"logout.php\" class=\"mdl-layout__tab login-button\">LOGOUT</a>
+              </div>";
           }
           ?>
         </div>
@@ -89,32 +115,87 @@
         <div class="mdl-layout__tab-panel is-active" id="overview">
           <section class="section--center mdl-grid mdl-grid--no-spacing">
             <?php
-            if(isset($row)){
-              echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                      <div class=\"post-card-text mdl-card__supporting-text\">"
-                        . $row['message'] .
-                      "</div>
-                      <div class=\"mdl-card__actions\">
-                      <div class=\"author-tag\">
-                        by
-                        <a class=\"hvr-underline-reveal author-name\" href=\"user.php?="
-                          . $row['username'] . "\">"
-                          . $row['username'] .
-                        "</a>
-                        on "
-                        . $row['timestamp'] .
-                      "</div>
-                        <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">LIKE</a>
-                        <a href=\"channel.php?ch=". $row['name'] ."\" class=\"mdl-button\">Back to channel</a>
+            if(!$_posting){
+              if(isset($row)){
+                echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
+                        <div class=\"post-card-text mdl-card__supporting-text\">"
+                          . $row['message'] .
+                        "</div>
+                        <div class=\"mdl-card__actions\">
+                        <div class=\"likes-container\">
+                          <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
+                            aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $userId . "," . $row['likes'] . ")\"></i>
+                          <span id=\"count" . $row['id'] . "\">" . $row['total'] .
+                          "</span>
+                        </div>
+                        <div class=\"author-tag\">
+                          by
+                          <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
+                            . $row['username'] . "\">"
+                            . $row['username'] .
+                          "</a>
+                          on "
+                          . $row['timestamp'] .
+                          " | posted in
+                          <a class=\"hvr-underline-reveal author-name\" href=\"channel.php?ch="
+                            . $row['name'] . "\">"
+                            . $row['name'] .
+                          "</a>
+                        </div>
+                          <a class=\"mdl-button\">" . (($row['likes']) ? "Unlike":"Like") . "</a>
+                        </div>
+                      </div>";
+              } else {
+                echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
+                        <div class=\"post-card-text mdl-card__supporting-text\">
+                        Uh oh... no post found.
+                        </div>
+                        <div class=\"mdl-card__actions\">
+                          <a href=\"channel.php\" class=\"mdl-button\">GO BACK</a>";
+              }
+            }else{
+              ?>
+              <div class="mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card">
+                <div class="mdl-card__supporting-text">
+              <?php
+              if($_loggedIn){
+              ?>
+                    <h4>New Post to #<?php echo $_GET['new'] ?> </h4>
+                    <form class="" action="post.php" method="post">
+                      <div id="counterDisp" style="color: #AAA;">Remaining: 500</div>
+                      <div class="mdl-textfield mdl-js-textfield">
+                        <textarea class="mdl-textfield__input" type="text" rows= "10" onkeyup="counter()" name="postContent" id="textArea1"></textarea>
+                        <label class="mdl-textfield__label" for="textArea1">Write here...</label>
                       </div>
-                    </div>";
-            } else {
-              echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                      <div class=\"post-card-text mdl-card__supporting-text\">
-                      Uh oh... no post found.
+                      <input type="hidden" name="dest" value="<?php echo $_GET['new']; ?>">
+                      <div>
+                        <input type="submit" class="hvr-fade login-submit" id="login-submit">
                       </div>
-                      <div class=\"mdl-card__actions\">
-                        <a href=\"channel.php\" class=\"mdl-button\">GO BACK</a>";
+                    </form>
+                    <span class="error"><?php echo $error; ?></span>
+                    <script type="text/javascript">
+                      function counter(){
+                        var max = 500;
+                        var field = document.getElementById("textArea1");
+                        var disp = document.getElementById("counterDisp");
+                        if(field.value.length > max){
+                          field.value = field.value.substring(0, max);
+                        }else{
+                          disp.innerHTML = "Remaining: " + (max - field.value.length);
+                        }
+                      }
+                    </script>
+              <?php
+              }else{
+                ?>
+                <h4>You need to log in to post</h4>
+                <a href="login.php">Log In</a>
+                <?php
+              }
+              ?>
+                  </div>
+                </div>
+                <?php
             }
             ?>
           </section>

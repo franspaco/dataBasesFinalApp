@@ -1,6 +1,46 @@
 <?php
   include'php/header.php';
+  $_ch = isset($_GET['ch']) ? $_GET['ch'] : "all";
+  echo "<br>Post: <br>";
+  var_dump ($_POST);
+  echo "<br>loggedIn: <br>";
+  var_dump ($_loggedIn);
+
+  if(!empty($_POST['loginUsername']) && !empty($_POST['loginPassword'])){
+    $usernm = $_POST['loginUsername'];
+    $passwd = $_POST['loginPassword'];
+    $queryLoginData->bind_param("ss", $usernm, $passwd);
+    $queryLoginData->execute();
+    $res = $queryLoginData->get_result();
+    echo "<br>RES: <br>";
+    var_dump($res);
+    $row = $res->fetch_assoc();
+    $queryLoginData->close();
+    echo "<br>ROW: <br>";
+    var_dump($row);
+    echo "1";
+    if(isset($row)){
+      echo "2";
+      $_SESSION['username'] = $usernm;
+      $_SESSION['LoggedIn'] = 1;
+      $_SESSION['userID'] = $row['id'];
+      $_loggedIn = true;
+      echo "<script>document.location = \"index.php\"</script>";
+    }
+  }
+
+  echo "Session: <br>";
+  var_dump ($_SESSION);
+  echo "<br>";
+
+  $_loggedIn = $_GET['login'];
+  if($_loggedIn){
+    echo "<a href=\"index.php\">You are logged in! Go to the fron page!</a>";
+    //echo "<script>document.location = \"index.php\"</script>";
+  }
+
  ?>
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -8,7 +48,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="A front-end template that helps you build fast, modern mobile web apps.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <title> Front Page | chirper </title>
+    <title> Login | chirper </title>
 
     <!-- Add to homescreen for Chrome on Android -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -49,7 +89,6 @@
       z-index: 900;
     }
     </style>
-    <script src="js/like.js"></script>
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
@@ -62,23 +101,16 @@
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
         </div>
         <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--primary-dark">
-          <span class="mdl-layout__tab" id="current-channel"> Front Page </span>
+          <span class="mdl-layout__tab" id="current-channel"> Log In </span>
           <?php
             if(!$_loggedIn){
               $queryDefaultChannels->execute();
               $res = $queryDefaultChannels->get_result();
-              while($row = $res->fetch_assoc()){
-                echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
+              while($rowLink = $res->fetch_assoc()){
+                echo "<a href=\"channel.php?ch=" . $rowLink['name'] . "\" class=\"mdl-layout__tab\">#". $rowLink['name'] . "</a>";
               }
-              echo "
-                <div style=\"width: 100%;\">
-                  <a href=\"login.php\" class=\"mdl-layout__tab login-button\">LOGIN</a>
-                </div>";
             }else{
-              echo "
-                <div style=\"width: 100%;\">
-                  <a href=\"logout.php\" class=\"mdl-layout__tab login-button\">LOGOUT</a>
-                </div>";
+
             }
           ?>
         </div>
@@ -86,42 +118,28 @@
       <main class="mdl-layout__content">
         <div class="mdl-layout__tab-panel is-active" id="overview">
           <section class="section--center mdl-grid mdl-grid--no-spacing">
-            <?php
-            $queryFrontPage->bind_param("i", $userId);
-            $queryFrontPage->execute();
-            $res = $queryFrontPage->get_result();
-            while($row = $res->fetch_assoc()){
-              echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                      <div class=\"post-card-text mdl-card__supporting-text\">"
-                        . $row['message'] .
-                      "</div>
-                      <div class=\"mdl-card__actions\">
-                      <div class=\"likes-container\">
-                        <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
-                          aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $userId . "," . $row['likes'] . ")\"></i>
-                        <span id=\"count" . $row['id'] . "\">" . $row['total'] .
-                        "</span>
-                      </div>
-                      <div class=\"author-tag\">
-                        by
-                        <a class=\"hvr-underline-reveal author-name\" href=\"user.php?="
-                          . $row['username'] . "\">"
-                          . $row['username'] .
-                        "</a>
-                        on "
-                        . $row['timestamp'] .
-                        " | posted in
-                        <a class=\"hvr-underline-reveal author-name\" href=\"channel.php?ch="
-                          . $row['name'] . "\">"
-                          . $row['name'] .
-                        "</a>
-                      </div>
-                      <!--<div class=\"mdl-card__actions\">-->
-                        <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
-                      </div>
-                    </div>";
-            }
-            ?>
+            <div class="mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card">
+              <div class="mdl-card__supporting-text">
+                <h4>Log in to chirper</h4>
+                <form class="" action="login.php" method="post">
+                  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text" id="sample3" name="loginUsername">
+                    <label class="mdl-textfield__label" for="sample3">Username...</label>
+                  </div>
+                  <br>
+                  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="password" id="sample3" name="loginPassword">
+                    <label class="mdl-textfield__label" for="sample3">Password...</label>
+                  </div>
+                  <div>
+                    <input type="submit" class="hvr-fade login-submit" id="login-submit">
+                  </div>
+                </form>
+              </div>
+              <div class="mdl-card__actions">
+                <a href="register.php" class="mdl-button">Register</a>
+              </div>
+            </div>
           </section>
         </div>
       </main>

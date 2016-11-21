@@ -1,7 +1,9 @@
 <?php
-  $_config = parse_ini_file("../php_files/config.php.ini");
-  $mysqli = new mysqli("localhost", $_config['mysqluser'], $_config['mysqlpass'], $_config['mysqlDB']);
+  session_start();
+  include'php/header.php';
+
   $_ch = isset($_GET['ch']) ? $_GET['ch'] : "all";
+  echo $_ch;
  ?>
 <!doctype html>
 <html lang="en">
@@ -35,6 +37,7 @@
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/material.min.css" />
     <link rel="stylesheet" href="css/custom.css" />
     <link rel="stylesheet" href="css/hoover.css" />
@@ -50,26 +53,58 @@
       z-index: 900;
     }
     </style>
+    <script src="js/like.js"></script>
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
       <header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
         </div>
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
-          <h3>chirper</h3>
+        <div class="mdl-layout--large-screen-only mdl-layout__header-row hvr-forward">
+          <h3><a href="index.php">chirper</a></h3>
         </div>
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
         </div>
         <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--primary-dark">
           <?php
-          $subs_qry = "SELECT * FROM CHANNELS WHERE is_default = true";
-          $subs_st = $mysqli->query($subs_qry);
-          $subs_st->data_seek(0);
-          echo "<a href=\"channel.php?ch=" . $_ch . "\" class=\"mdl-layout__tab\" id=\"current-channel\">#" . $_ch . "</a>";
-          while($row = $subs_st->fetch_assoc()){
-            echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
-          }
+            echo "<span class=\"mdl-layout__tab\" id=\"current-channel\">#" . $_ch . "</span>";
+            if(!$_loggedIn){
+              $queryDefaultChannels->execute();
+              $res = $queryDefaultChannels->get_result();
+              while($row = $res->fetch_assoc()){
+                echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
+              }
+              echo "
+                <div style=\"width: 100%;\">
+                  <a href=\"login.php\" class=\"mdl-layout__tab login-button\">LOGIN</a>
+                </div>";
+            }else{
+              echo "
+                <div style=\"width: 100%;\">
+                  <a href=\"logout.php\" class=\"mdl-layout__tab login-button\">LOGOUT</a>
+                </div>";
+              echo
+                "<button title=\"New Post\" class=\"mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent\"
+                  id=\"add\"
+                  onclick=\"redirectNewPost()\"
+                  >
+                  <i class=\"material-icons\" role=\"presentation\">create</i>
+                  <span class=\"visuallyhidden\" onclick=\"redirectNewPost\">Create</span>
+                </button>
+                <button title=\"Subscribe\" class=\"mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent\"
+                  id=\"subscribe\"
+                  onclick=\"subscribe()\"
+                  >
+                  <i class=\"material-icons\" role=\"presentation\">notifications</i>
+                  <span class=\"visuallyhidden\" onclick=\"redirectNewPost\">Notifications</span>
+                </button>
+                <script>
+                  function redirectNewPost() {
+                    console.log(\"Called\");
+                    document.location=\"post.php?new=" . $_ch ."\";
+                  }
+                </script>";
+            }
           ?>
         </div>
       </header>
@@ -77,26 +112,26 @@
         <div class="mdl-layout__tab-panel is-active" id="overview">
           <section class="section--center mdl-grid mdl-grid--no-spacing">
             <?php
-            $qry =
-              "SELECT USERS.username, POSTS.id, POSTS.message, POSTS.timestamp, CHANNELS.name
-                FROM (CHANNELS INNER JOIN POSTS
-	                 ON POSTS.channel = CHANNELS.id ) INNER JOIN USERS
-		                 ON USERS.id = POSTS.owner
-                     WHERE CHANNELS.name = '" . $mysqli->escape_string($_ch) . "'
-                     ORDER BY timestamp DESC";
-            //echo $qry;
-            $stmt = $mysqli->query($qry);
-            $stmt->data_seek(0);
+            $queryChannel->bind_param("ss", $userId, $_ch);
+            $queryChannel->execute();
 
-            while($row = $stmt->fetch_assoc()){
+            $res = $queryChannel->get_result();
+
+            while($row = $res->fetch_assoc()){
               echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
                       <div class=\"post-card-text mdl-card__supporting-text\">"
                         . $row['message'] .
                       "</div>
                       <div class=\"mdl-card__actions\">
+                      <div class=\"likes-container\">
+                        <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
+                          aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $userId . "," . $row['likes'] . ")\"></i>
+                        <span id=\"count" . $row['id'] . "\">" . $row['total'] .
+                        "</span>
+                      </div>
                       <div class=\"author-tag\">
                         by
-                        <a class=\"hvr-underline-reveal author-name\" href=\"user.php?="
+                        <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
                           . $row['username'] . "\">"
                           . $row['username'] .
                         "</a>
@@ -104,7 +139,7 @@
                         . $row['timestamp'] .
                       "</div>
                       <!--<div class=\"mdl-card__actions\">-->
-                        <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">LIKE</a>
+                        <a class=\"mdl-button\">" . (($row['likes']) ? "Unlike":"Like") . "</a>
                         <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
                       </div>
                     </div>";

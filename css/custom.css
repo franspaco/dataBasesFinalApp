@@ -1,7 +1,22 @@
 
+div h3 a {
+  color: white;
+  text-decoration: none;
+}
+
 #current-channel{
   border-right: 2px solid #BF360C;
-  width: 60px;
+  width: 90px;
+}
+
+.login-submit{
+  border: none;
+  background-color: #ff5722;
+  padding: 15px;
+  color: white;
+}
+.login-submit:hover{
+  cursor: pointer;
 }
 
 .post-card{
@@ -28,4 +43,48 @@
 .author-name{
   padding-bottom: 3px;
   margin-left: 5px;
+}
+
+.login-button{
+  float: right;
+  text-align: right;
+}
+
+.mdl-demo #subscribe {
+  position: absolute;
+  right: 200px;
+  top: 36px;
+  z-index: 999;
+}
+
+.likes-container{
+  margin-bottom: 5px;
+  margin-top: 5px;
+  -webkit-user-select: none; /* Chrome/Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+ */
+
+  /* Rules below not implemented in browsers yet */
+  -o-user-select: none;
+  user-select: none;
+}
+
+.likes-heart{
+  color: #F44336;
+  cursor: pointer;
+}
+
+.heart-red{
+  color: #F44336;
+}
+
+.heart-gray{
+  color: #808080;
+}
+
+.error{
+  font-style: italic;
+  color: #F44336;
+  font-size: 90%;
+  margin-bottom: 10px;
 }
