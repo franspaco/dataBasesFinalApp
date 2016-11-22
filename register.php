@@ -1,26 +1,30 @@
 <?php
   include'php/header.php';
 
-  if(isset($_POST['loginUsername']) && isset($_POST['loginPassword'])){
-    $usernm = $_POST['loginUsername'];
-    $passwd = $_POST['loginPassword'];
-    $queryLoginData->bind_param("s", $usernm);
-    $queryLoginData->execute();
-    $row = $queryLoginData->get_result()->fetch_assoc();
-    $queryLoginData->close();
+  echo "<br>Post: <br>";
+  var_dump ($_POST);
+  echo "<br>loggedIn: <br>";
+  var_dump ($_loggedIn);
 
-    if(isset($row)){
-      if(password_verify($passwd, $row['password'])){
-        $_SESSION['username'] = $usernm;
-        $_SESSION['LoggedIn'] = 1;
-        $_SESSION['userID'] = $row['id'];
-        $_loggedIn = true;
-        echo "<script>document.location = \"index.php\"</script>";
-      }else{
-        $error = "Hash Failed!";
+  if(!empty($_POST['username']) && !empty($_POST['password']) && !empty($_POST['email'])){
+    $insertNewUser->bind_param("sss",$_POST['username'], password_hash($_POST['password'],PASSWORD_DEFAULT), $_POST['email']);
+    if($insertNewUser->execute()){
+      $newUserId = $mysqli->query("SELECT LAST_INSERT_ID() AS id;")->fetch_assoc()['id'];
+      $_SESSION['username'] = $_POST['username'];
+      $_SESSION['LoggedIn'] = 1;
+      $_SESSION['userID'] = $newUserId;
+      $_loggedIn = true;
+
+      $queryDefaultChannels->execute();
+      $res = $queryDefaultChannels->get_result();
+      while($rowLink = $res->fetch_assoc()){
+        $insertSubscription->bind_param("ss", $newUserId, $rowLink['id']);
+        $insertSubscription->execute();
       }
+      
+      echo "<script>document.location = \"index.php\"</script>";
     }else{
-      $error = "Wrong username or password!";
+      $error = "Could not create user!";
     }
   }
 
@@ -42,7 +46,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="A front-end template that helps you build fast, modern mobile web apps.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <title> Login | chirper </title>
+    <title> Register | chirper </title>
 
     <!-- Add to homescreen for Chrome on Android -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -114,27 +118,58 @@
           <section class="section--center mdl-grid mdl-grid--no-spacing">
             <div class="mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card">
               <div class="mdl-card__supporting-text">
-                <h4>Log in to chirper</h4>
-                <form class="" action="login.php" method="post">
+                <h4>Create account</h4>
+                <form class="" action="register.php" method="post">
                   <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input class="mdl-textfield__input" type="text" id="sample3" name="loginUsername">
-                    <label class="mdl-textfield__label" for="sample3">Username...</label>
+                    <input class="mdl-textfield__input" type="text" id="sample1" name="username" onkeyup="checkPwd()">
+                    <label class="mdl-textfield__label" for="sample1">Username...</label>
                   </div>
                   <br>
                   <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input class="mdl-textfield__input" type="password" id="sample3" name="loginPassword">
+                    <input class="mdl-textfield__input" type="email" id="sample2" name="email" onkeyup="checkPwd()">
+                    <label class="mdl-textfield__label" for="sample2">Email</label>
+                  </div>
+                  <br>
+                  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="password" id="sample3" name="password" onkeyup="checkPwd()">
                     <label class="mdl-textfield__label" for="sample3">Password...</label>
                   </div>
+                  <br>
+                  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="password" id="sample4" name="password2" onkeyup="checkPwd()">
+                    <label class="mdl-textfield__label" for="sample4">Verify password...</label>
+                  </div>
                   <div>
-                    <input type="submit" class="hvr-fade login-submit-en" id="login-submit">
+                    <input type="submit" class="login-submit-dis" id="login-submit-btn" disabled>
                   </div>
                 </form>
-                <span class="error"><?php echo $error; ?></span>
-              </div>
-              <div class="mdl-card__actions">
-                <a href="register.php" class="mdl-button">Register</a>
+                <span class="error" id="error-disp"><?php echo $error; ?></span>
               </div>
             </div>
+            <script type="text/javascript">
+              function checkPwd(){
+                var usrn = document.getElementById('sample1');
+                var emai = document.getElementById('sample2');
+                var pwd1 = document.getElementById('sample3');
+                var pwd2 = document.getElementById('sample4');
+                var subm = document.getElementById('login-submit-btn');
+                var erro = document.getElementById('error-disp');
+                if(pwd1.value == pwd2.value && !isBlank(usrn.value) && !isBlank(emai.value)  && !isBlank(pwd1.value)){
+                  subm.disabled = false;
+                  subm.classList.add("hvr-fade", "login-submit-en");
+                  subm.classList.remove("login-submit-dis");
+                  erro.innerHTML = "";
+                }else{
+                  subm.disabled = true;
+                  subm.classList.add("login-submit-dis");
+                  subm.classList.remove("hvr-fade");
+                  erro.innerHTML = "Passwords don't match!";
+                }
+              }
+              function isBlank(str) {
+                return (!str || /^\s*$/.test(str));
+              }
+            </script>
           </section>
         </div>
       </main>

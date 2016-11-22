@@ -9,14 +9,21 @@ div h3 a {
   width: 90px;
 }
 
-.login-submit{
+.login-submit-en{
   border: none;
   background-color: #ff5722;
   padding: 15px;
   color: white;
 }
-.login-submit:hover{
+.login-submit-en:hover{
   cursor: pointer;
+}
+
+.login-submit-dis{
+  border: none;
+  background-color: #808080;
+  padding: 15px;
+  color: white;
 }
 
 .post-card{

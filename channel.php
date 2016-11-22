@@ -3,7 +3,15 @@
   include'php/header.php';
 
   $_ch = isset($_GET['ch']) ? $_GET['ch'] : "all";
-  echo $_ch;
+  if($_loggedIn){
+    $querySubscribed->bind_param("ss",$_SESSION['userID'],$_ch);
+    $querySubscribed->execute();
+    $is_sub = $querySubscribed->get_result()->fetch_assoc()['is_sub'];
+  }
+  $queryChannelId->bind_param("s", $_ch);
+  $queryChannelId->execute();
+  $resCh = $queryChannelId->get_result()->fetch_assoc()['id'];
+  $chExists = isset($resCh);
  ?>
 <!doctype html>
 <html lang="en">
@@ -23,18 +31,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Material Design Lite">
     <link rel="apple-touch-icon-precomposed" href="images/ios-desktop.png">
-
     <!-- Tile icon for Win8 (144x144 + tile color) -->
     <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
     <meta name="msapplication-TileColor" content="#3372DF">
 
     <link rel="shortcut icon" href="images/favicon.png">
-
     <!-- SEO: If your mobile URL is different from the desktop URL, add a canonical link to the desktop page https://developers.google.com/webmasters/smartphone-sites/feature-phones -->
     <!--
     <link rel="canonical" href="http://www.example.com/">
     -->
-
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
@@ -79,31 +84,38 @@
                   <a href=\"login.php\" class=\"mdl-layout__tab login-button\">LOGIN</a>
                 </div>";
             }else{
-              echo "
-                <div style=\"width: 100%;\">
-                  <a href=\"logout.php\" class=\"mdl-layout__tab login-button\">LOGOUT</a>
-                </div>";
-              echo
-                "<button title=\"New Post\" class=\"mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent\"
-                  id=\"add\"
-                  onclick=\"redirectNewPost()\"
-                  >
-                  <i class=\"material-icons\" role=\"presentation\">create</i>
-                  <span class=\"visuallyhidden\" onclick=\"redirectNewPost\">Create</span>
+              $queryUserSubscribed->bind_param("s", $_SESSION['userID']);
+              $queryUserSubscribed->execute();
+              $res = $queryUserSubscribed->get_result();
+              while($row = $res->fetch_assoc()){
+                echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
+              }
+              if($chExists){
+              ?>
+                <div style="width: 100%;">
+                  <a href="logout.php" class="mdl-layout__tab login-button">LOGOUT</a>
+                </div>"
+                <button title="New Post" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent"
+                  id="add"
+                  onclick="redirectNewPost()">
+                  <i class="material-icons" role="presentation">create</i>
+                  <span class="visuallyhidden">Create</span>
                 </button>
-                <button title=\"Subscribe\" class=\"mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent\"
-                  id=\"subscribe\"
-                  onclick=\"subscribe()\"
-                  >
-                  <i class=\"material-icons\" role=\"presentation\">notifications</i>
-                  <span class=\"visuallyhidden\" onclick=\"redirectNewPost\">Notifications</span>
+
+                <button title=" <?php echo ($is_sub)? "Unsubscribe": "Subscribe" ?> "
+                  class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent"
+                  id="subscribe"
+                  onclick="subscribe(this,'<?php echo $resCh . "'," . $userId . "," . $is_sub ?>)">
+                  <i class="material-icons" role="presentation" id="subscribeIcon">notifications<?php echo ($is_sub)? "_off": "" ?></i>
+                  <span class="visuallyhidden">Notifications</span>
                 </button>
                 <script>
                   function redirectNewPost() {
-                    console.log(\"Called\");
-                    document.location=\"post.php?new=" . $_ch ."\";
+                    document.location="post.php?new=<?php echo $_ch ?>";
                   }
-                </script>";
+                </script>
+              <?php
+              }
             }
           ?>
         </div>
@@ -112,37 +124,52 @@
         <div class="mdl-layout__tab-panel is-active" id="overview">
           <section class="section--center mdl-grid mdl-grid--no-spacing">
             <?php
-            $queryChannel->bind_param("ss", $userId, $_ch);
-            $queryChannel->execute();
-
-            $res = $queryChannel->get_result();
-
-            while($row = $res->fetch_assoc()){
+            if($chExists){
+              $queryPosts->bind_param("sss", $userId, $null, $_ch);
+              $queryPosts->execute();
+              $res = $queryPosts->get_result();
+              if($res->num_rows > 0){
+                while($row = $res->fetch_assoc()){
+                  echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
+                          <div class=\"post-card-text mdl-card__supporting-text\">"
+                            . $row['message'] .
+                          "</div>
+                          <div class=\"mdl-card__actions\">
+                          <div class=\"likes-container\">
+                            <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
+                              aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $userId . "," . $row['likes'] . ")\"></i>
+                            <span id=\"count" . $row['id'] . "\">" . $row['total'] .
+                            "</span>
+                          </div>
+                          <div class=\"author-tag\">
+                            by
+                            <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
+                              . $row['username'] . "\">"
+                              . $row['username'] .
+                            "</a>
+                            on "
+                            . $row['timestamp'] .
+                          "</div>
+                          <!--<div class=\"mdl-card__actions\">-->
+                            <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
+                          </div>
+                        </div>";
+                }
+              }else{
+                echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
+                        <div class=\"post-card-text mdl-card__supporting-text\">
+                        No one has posted here yet...
+                        </div>
+                        <div class=\"mdl-card__actions\">
+                          <a href=\"index.php\" class=\"mdl-button\">GO BACK</a>";
+              }
+            }else{
               echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                      <div class=\"post-card-text mdl-card__supporting-text\">"
-                        . $row['message'] .
-                      "</div>
+                      <div class=\"post-card-text mdl-card__supporting-text\">
+                      Uh oh... no channel found. 404!!1!
+                      </div>
                       <div class=\"mdl-card__actions\">
-                      <div class=\"likes-container\">
-                        <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
-                          aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $userId . "," . $row['likes'] . ")\"></i>
-                        <span id=\"count" . $row['id'] . "\">" . $row['total'] .
-                        "</span>
-                      </div>
-                      <div class=\"author-tag\">
-                        by
-                        <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
-                          . $row['username'] . "\">"
-                          . $row['username'] .
-                        "</a>
-                        on "
-                        . $row['timestamp'] .
-                      "</div>
-                      <!--<div class=\"mdl-card__actions\">-->
-                        <a class=\"mdl-button\">" . (($row['likes']) ? "Unlike":"Like") . "</a>
-                        <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
-                      </div>
-                    </div>";
+                        <a href=\"index.php\" class=\"mdl-button\">GO BACK</a>";
             }
             ?>
           </section>

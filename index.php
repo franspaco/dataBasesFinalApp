@@ -75,6 +75,12 @@
                   <a href=\"login.php\" class=\"mdl-layout__tab login-button\">LOGIN</a>
                 </div>";
             }else{
+              $queryUserSubscribed->bind_param("s", $_SESSION['userID']);
+              $queryUserSubscribed->execute();
+              $res = $queryUserSubscribed->get_result();
+              while($row = $res->fetch_assoc()){
+                echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
+              }
               echo "
                 <div style=\"width: 100%;\">
                   <a href=\"logout.php\" class=\"mdl-layout__tab login-button\">LOGOUT</a>
@@ -87,9 +93,9 @@
         <div class="mdl-layout__tab-panel is-active" id="overview">
           <section class="section--center mdl-grid mdl-grid--no-spacing">
             <?php
-            $queryFrontPage->bind_param("i", $userId);
-            $queryFrontPage->execute();
-            $res = $queryFrontPage->get_result();
+            $queryPosts->bind_param("iss", $userId, $null, $null);
+            $queryPosts->execute();
+            $res = $queryPosts->get_result();
             while($row = $res->fetch_assoc()){
               echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
                       <div class=\"post-card-text mdl-card__supporting-text\">"

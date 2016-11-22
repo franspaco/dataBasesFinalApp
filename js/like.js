@@ -20,3 +20,23 @@ function likes(heart, post, user, action){
     counter.innerHTML = number;
   }
 }
+
+function subscribe(button, channel, user, action){
+  if(user != "0"){
+    var request = new XMLHttpRequest();
+    request.open("POST","subscribe.php",true);
+    request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    request.send("channel=" + channel + "&user=" + user + "&action=" + action);
+
+    var icon = document.getElementById("subscribeIcon");
+    if(action == 0){
+      icon.innerHTML = "notifications_off";
+      button.setAttribute("title","Unsubscribe");
+      button.setAttribute("onclick","subscribe(this,'" + channel + "'," + user + ",1)");
+    }else if(action == 1){
+      icon.innerHTML = "notifications";
+      button.setAttribute("title","Subscribe");
+      button.setAttribute("onclick","subscribe(this,'" + channel + "'," + user + ",0)");
+    }
+  }
+}

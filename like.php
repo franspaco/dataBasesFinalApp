@@ -1,7 +1,7 @@
 <?php
   include'php/header.php';
-  error_log($loggedIn,0);
-  if($_loggedIn){
+
+  if($_loggedIn && $_POST['user'] == $_SESSION['userID']){
     var_dump($_GET);
     echo "<br>POST:<br>";
     var_dump($_POST);

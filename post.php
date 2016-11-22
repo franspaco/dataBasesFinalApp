@@ -23,10 +23,12 @@
     }
   }
   if(!$_posting){
-    $queryPost->bind_param("is", $userId, $_postid);
-    $queryPost->execute();
-    $res = $queryPost->get_result();
-    $row = $res->fetch_assoc();
+    if(isset($_postid)){
+      $queryPosts->bind_param("iss", $userId, $_postid, $null);
+      $queryPosts->execute();
+      $res = $queryPosts->get_result();
+      $row = $res->fetch_assoc();
+    }
   }
  ?>
 <!doctype html>
@@ -103,6 +105,12 @@
                 <a href=\"login.php\" class=\"mdl-layout__tab login-button\">LOGIN</a>
               </div>";
           }else{
+            $queryUserSubscribed->bind_param("s", $_SESSION['userID']);
+            $queryUserSubscribed->execute();
+            $res = $queryUserSubscribed->get_result();
+            while($rowCh = $res->fetch_assoc()){
+              echo "<a href=\"channel.php?ch=" . $rowCh['name'] . "\" class=\"mdl-layout__tab\">#". $rowCh['name'] . "</a>";
+            }
             echo "
               <div style=\"width: 100%;\">
                 <a href=\"logout.php\" class=\"mdl-layout__tab login-button\">LOGOUT</a>
@@ -122,27 +130,26 @@
                           . $row['message'] .
                         "</div>
                         <div class=\"mdl-card__actions\">
-                        <div class=\"likes-container\">
-                          <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
-                            aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $userId . "," . $row['likes'] . ")\"></i>
-                          <span id=\"count" . $row['id'] . "\">" . $row['total'] .
-                          "</span>
-                        </div>
-                        <div class=\"author-tag\">
-                          by
-                          <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
-                            . $row['username'] . "\">"
-                            . $row['username'] .
-                          "</a>
-                          on "
-                          . $row['timestamp'] .
-                          " | posted in
-                          <a class=\"hvr-underline-reveal author-name\" href=\"channel.php?ch="
-                            . $row['name'] . "\">"
-                            . $row['name'] .
-                          "</a>
-                        </div>
-                          <a class=\"mdl-button\">" . (($row['likes']) ? "Unlike":"Like") . "</a>
+                          <div class=\"likes-container\">
+                            <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
+                              aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $userId . "," . $row['likes'] . ")\"></i>
+                            <span id=\"count" . $row['id'] . "\">" . $row['total'] .
+                            "</span>
+                          </div>
+                          <div class=\"author-tag\">
+                            by
+                            <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
+                              . $row['username'] . "\">"
+                              . $row['username'] .
+                            "</a>
+                            on "
+                            . $row['timestamp'] .
+                            " | posted in
+                            <a class=\"hvr-underline-reveal author-name\" href=\"channel.php?ch="
+                              . $row['name'] . "\">"
+                              . $row['name'] .
+                            "</a>
+                          </div>
                         </div>
                       </div>";
               } else {
@@ -151,7 +158,7 @@
                         Uh oh... no post found.
                         </div>
                         <div class=\"mdl-card__actions\">
-                          <a href=\"channel.php\" class=\"mdl-button\">GO BACK</a>";
+                          <a href=\"index.php\" class=\"mdl-button\">GO BACK</a>";
               }
             }else{
               ?>
@@ -169,7 +176,7 @@
                       </div>
                       <input type="hidden" name="dest" value="<?php echo $_GET['new']; ?>">
                       <div>
-                        <input type="submit" class="hvr-fade login-submit" id="login-submit">
+                        <input type="submit" class="hvr-fade login-submit-en" id="login-submit">
                       </div>
                     </form>
                     <span class="error"><?php echo $error; ?></span>
