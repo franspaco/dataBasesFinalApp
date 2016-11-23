@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="A front-end template that helps you build fast, modern mobile web apps.">
+    <meta name="description" content="chirper, taking over the world one chirp at a time">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <title> Front Page | chirper </title>
 
@@ -99,7 +99,7 @@
             while($row = $res->fetch_assoc()){
               echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
                       <div class=\"post-card-text mdl-card__supporting-text\">"
-                        . $row['message'] .
+                        . htmlentities($row['message']) .
                       "</div>
                       <div class=\"mdl-card__actions\">
                       <div class=\"likes-container\">
@@ -111,8 +111,8 @@
                       <div class=\"author-tag\">
                         by
                         <a class=\"hvr-underline-reveal author-name\" href=\"user.php?="
-                          . $row['username'] . "\">"
-                          . $row['username'] .
+                          . htmlentities($row['username']) . "\">"
+                          . htmlentities($row['username']) .
                         "</a>
                         on "
                         . $row['timestamp'] .

@@ -23,11 +23,6 @@
       $error = "Wrong username or password!";
     }
   }
-
-  echo "Session: <br>";
-  var_dump ($_SESSION);
-  echo "<br>";
-
   if($_loggedIn){
     echo "<a href=\"index.php\">You are logged in! Go to the fron page!</a>";
     echo "<script>document.location = \"index.php\"</script>";
@@ -40,7 +35,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="A front-end template that helps you build fast, modern mobile web apps.">
+    <meta name="description" content="chirper, taking over the world one chirp at a time">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <title> Login | chirper </title>
 

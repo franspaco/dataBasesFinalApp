@@ -90,14 +90,14 @@
             while($row = $stmt->fetch_assoc()){
               echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
                       <div class=\"post-card-text mdl-card__supporting-text\">"
-                        . $row['message'] .
+                        . htmlentities($row['message']) .
                       "</div>
                       <div class=\"mdl-card__actions\">
                       <div class=\"author-tag\">
                         by
                         <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
-                          . $row['username'] . "\">"
-                          . $row['username'] .
+                          . htmlentities($row['username']) . "\">"
+                          . htmlentities($row['username']) .
                         "</a>
                         on "
                         . $row['timestamp'] .
