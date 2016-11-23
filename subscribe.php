@@ -7,15 +7,15 @@
   */
   $resCh = $_POST['channel'];
 
-  if($_loggedIn && $_POST['user'] == $_SESSION['userID']){
+  if($_loggedIn){
     var_dump($_GET);
     echo "<br>POST:<br>";
     var_dump($_POST);
     if($_POST['action'] == "0"){
-      $insertSubscription->bind_param("ss", $_POST['user'], $resCh);
+      $insertSubscription->bind_param("ss", $userId, $resCh);
       $insertSubscription->execute();
     }else if ($_POST['action'] == "1"){
-      $deleteSubscription->bind_param("ss", $_POST['user'], $resCh);
+      $deleteSubscription->bind_param("ss", $userId, $resCh);
       $deleteSubscription->execute();
     }
   }

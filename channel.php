@@ -58,21 +58,22 @@
       z-index: 900;
     }
     </style>
-    <script src="js/like.js"></script>
+    <?php echo ($_loggedIn) ? "<script src=\"js/like.js\"></script>" : ""; ?>
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
       <header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
         </div>
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row hvr-forward">
-          <h3><a href="index.php">chirper</a></h3>
+        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
+          <h3 class="hvr-forward"><a href="index.php" class="pointer">chirper</a></h3>
         </div>
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
+          <h5>#<?php echo $_ch ?></h5>
         </div>
         <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--primary-dark">
+          <a href="guide.php" class="mdl-layout__tab" id="current-channel"> Guide </span>
           <?php
-            echo "<span class=\"mdl-layout__tab\" id=\"current-channel\">#" . $_ch . "</span>";
             if(!$_loggedIn){
               $queryDefaultChannels->execute();
               $res = $queryDefaultChannels->get_result();
@@ -90,11 +91,13 @@
               while($row = $res->fetch_assoc()){
                 echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
               }
+              ?>
+              <div style="width: 100%;">
+                <a href="logout.php" class="mdl-layout__tab login-button">LOGOUT</a>
+              </div>
+              <?php
               if($chExists){
               ?>
-                <div style="width: 100%;">
-                  <a href="logout.php" class="mdl-layout__tab login-button">LOGOUT</a>
-                </div>"
                 <button title="New Post" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent"
                   id="add"
                   onclick="redirectNewPost()">
@@ -105,7 +108,7 @@
                 <button title=" <?php echo ($is_sub)? "Unsubscribe": "Subscribe" ?> "
                   class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent"
                   id="subscribe"
-                  onclick="subscribe(this,'<?php echo $resCh . "'," . $userId . "," . $is_sub ?>)">
+                  onclick="subscribe(this,'<?php echo $resCh . "'," . $is_sub ?>)">
                   <i class="material-icons" role="presentation" id="subscribeIcon">notifications<?php echo ($is_sub)? "_off": "" ?></i>
                   <span class="visuallyhidden">Notifications</span>
                 </button>
@@ -125,7 +128,7 @@
           <section class="section--center mdl-grid mdl-grid--no-spacing">
             <?php
             if($chExists){
-              $queryPosts->bind_param("sss", $userId, $null, $_ch);
+              $queryPosts->bind_param("ssss", $userId, $null, $_ch, $null);
               $queryPosts->execute();
               $res = $queryPosts->get_result();
               if($res->num_rows > 0){
@@ -137,7 +140,7 @@
                           <div class=\"mdl-card__actions\">
                           <div class=\"likes-container\">
                             <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
-                              aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $userId . "," . $row['likes'] . ")\"></i>
+                              aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $row['likes'] . ")\"></i>
                             <span id=\"count" . $row['id'] . "\">" . $row['total'] .
                             "</span>
                           </div>
@@ -150,7 +153,6 @@
                             on "
                             . $row['timestamp'] .
                           "</div>
-                          <!--<div class=\"mdl-card__actions\">-->
                             <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
                           </div>
                         </div>";

@@ -49,20 +49,21 @@
       z-index: 900;
     }
     </style>
-    <script src="js/like.js"></script>
+    <?php echo ($_loggedIn) ? "<script src=\"js/like.js\"></script>" : ""; ?>
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
       <header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
         </div>
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row hvr-forward">
-          <h3><a href="index.php">chirper</a></h3>
+        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
+          <h3 class="hvr-forward"><a href="index.php" class="pointer">chirper</a></h3>
         </div>
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
+          <h5>Front Page</h5>
         </div>
         <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--primary-dark">
-          <span class="mdl-layout__tab" id="current-channel"> Front Page </span>
+          <a href="guide.php" class="mdl-layout__tab" id="current-channel"> Guide </span>
           <?php
             if(!$_loggedIn){
               $queryDefaultChannels->execute();
@@ -93,9 +94,15 @@
         <div class="mdl-layout__tab-panel is-active" id="overview">
           <section class="section--center mdl-grid mdl-grid--no-spacing">
             <?php
-            $queryPosts->bind_param("iss", $userId, $null, $null);
-            $queryPosts->execute();
-            $res = $queryPosts->get_result();
+            if(!$_loggedIn){
+              $queryPosts->bind_param("isss", $userId, $null, $null, $null);
+              $queryPosts->execute();
+              $res = $queryPosts->get_result();
+            }else{
+              $queryUserFrontPage->bind_param("ss", $userId, $userId);
+              $queryUserFrontPage->execute();
+              $res = $queryUserFrontPage->get_result();
+            }
             while($row = $res->fetch_assoc()){
               echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
                       <div class=\"post-card-text mdl-card__supporting-text\">"
@@ -104,7 +111,7 @@
                       <div class=\"mdl-card__actions\">
                       <div class=\"likes-container\">
                         <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
-                          aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $userId . "," . $row['likes'] . ")\"></i>
+                          aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $row['likes'] . ")\"></i>
                         <span id=\"count" . $row['id'] . "\">" . $row['total'] .
                         "</span>
                       </div>
@@ -118,11 +125,10 @@
                         . $row['timestamp'] .
                         " | posted in
                         <a class=\"hvr-underline-reveal author-name\" href=\"channel.php?ch="
-                          . $row['name'] . "\">"
+                          . $row['name'] . "\">#"
                           . $row['name'] .
                         "</a>
                       </div>
-                      <!--<div class=\"mdl-card__actions\">-->
                         <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
                       </div>
                     </div>";

@@ -94,3 +94,27 @@ div h3 a {
   font-size: 90%;
   margin-bottom: 10px;
 }
+
+.channel-button{
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-left: 30px;
+  padding-right: 30px;
+  background-color: #CCCCCC;
+  text-decoration: none;
+  color: black;
+  margin: 15px;
+  min-width: 100px;
+  text-align: center;
+  font-size: 150%;
+}
+
+.pointer{
+  cursor: pointer;
+}
+
+.ch-owner{
+  font-size: 50%;
+  font-style: italic;
+  color: #707070;
+}

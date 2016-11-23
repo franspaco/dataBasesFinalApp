@@ -25,6 +25,8 @@
     POSTS.id = coalesce(?, POSTS.id)
     AND
     CHANNELS.name = coalesce(?, CHANNELS.name)
+    AND
+    USERS.username = coalesce(?, USERS.username)
     ORDER BY timestamp DESC"
   );
 
@@ -35,7 +37,7 @@
         ON POSTS.channel = CHANNELS.id INNER JOIN USERS
 		      ON USERS.id = POSTS.owner LEFT JOIN
           (
-			      SELECT POSTS_id, count(*) as likesCount, count(case USERS_id when 2 then 1 else null end) AS usrLikes
+			      SELECT POSTS_id, count(*) as likesCount, count(case USERS_id when (?) then 1 else null end) AS usrLikes
 	          FROM LIKES
 		        GROUP BY POSTS_id
           ) AS postLikes
@@ -45,70 +47,80 @@
      ORDER BY POSTS.timestamp DESC"
    );
 
-   //CHANNELS QUERIES **********************************************************
+   //CHANNELS QUERIES/CREATION *************************************************
    $queryDefaultChannels = $mysqli->prepare(
      "SELECT *
      FROM CHANNELS
      WHERE is_default = true"
    );
 
-   $queryChannelId = $mysqli->prepare(
+   $queryChannels = $mysqli->prepare(
+    "SELECT name, username
+    FROM CHANNELS INNER JOIN USERS
+      ON CHANNELS.owner = USERS.id"
+  );
+
+  $queryChannelId = $mysqli->prepare(
      "SELECT id
      FROM CHANNELS
      WHERE name=?"
-   );
+  );
 
-   //LOGIN CHECKING / CREATION *************************************************
-   $queryLoginData = $mysqli->prepare(
-     "SELECT *
-     FROM USERS
-     WHERE username=?
-     "
-   );
+  $insertChannel = $mysqli->prepare(
+  "INSERT INTO CHANNELS (name, owner, is_default) values (?,?,0)"
+  );
 
-   $insertNewUser = $mysqli->prepare(
-     "INSERT INTO USERS (username, password, email) values (?,?,?)"
-   );
+  //LOGIN CHECKING / CREATION *************************************************
+  $queryLoginData = $mysqli->prepare(
+   "SELECT *
+   FROM USERS
+   WHERE username=?
+   "
+  );
 
-   //POST INSERTION/DELETION ***************************************************
-   $insertPost = $mysqli->prepare(
-     "INSERT INTO POSTS (owner, channel, message) values (?,?,?)"
-   );
+  $insertNewUser = $mysqli->prepare(
+   "INSERT INTO USERS (username, password, email) values (?,?,?)"
+  );
 
-   $deletePost = $mysqli->prepare(
-     "DELETE FROM POSTS WHERE owner=? AND id=?"
-   );
+  //POST INSERTION/DELETION ***************************************************
+  $insertPost = $mysqli->prepare(
+   "INSERT INTO POSTS (owner, channel, message) values (?,?,?)"
+  );
 
-   //LIKE INSERTION/DELETION ***************************************************
-   $insertLike = $mysqli->prepare(
-     "INSERT IGNORE INTO LIKES values (?,?)"
-   );
+  $deletePost = $mysqli->prepare(
+   "DELETE FROM POSTS WHERE owner=? AND id=?"
+  );
 
-   $deleteLike = $mysqli->prepare(
-     "DELETE FROM LIKES WHERE USERS_id=? AND POSTS_id=?"
-   );
+  //LIKE INSERTION/DELETION ***************************************************
+  $insertLike = $mysqli->prepare(
+   "INSERT IGNORE INTO LIKES values (?,?)"
+  );
 
-   //SUBSCRIPTION CHECKING / INSERTION / DELETION ******************************
-   $queryUserSubscribed = $mysqli->prepare(
-     "SELECT CHANNELS_id, name
-     FROM SUBSCRIBED INNER JOIN CHANNELS
-       ON SUBSCRIBED.CHANNELS_id = CHANNELS.id
-     WHERE USERS_id=?
-     "
-   );
+  $deleteLike = $mysqli->prepare(
+   "DELETE FROM LIKES WHERE USERS_id=? AND POSTS_id=?"
+  );
 
-   $querySubscribed = $mysqli->prepare(
-     "SELECT count(*) AS is_sub
-     FROM SUBSCRIBED INNER JOIN CHANNELS
-      ON CHANNELS.id = SUBSCRIBED.CHANNELS_id
-     WHERE SUBSCRIBED.USERS_id=? AND CHANNELS.name=?"
-   );
+  //SUBSCRIPTION CHECKING / INSERTION / DELETION ******************************
+  $queryUserSubscribed = $mysqli->prepare(
+   "SELECT CHANNELS_id, name
+   FROM SUBSCRIBED INNER JOIN CHANNELS
+     ON SUBSCRIBED.CHANNELS_id = CHANNELS.id
+   WHERE USERS_id=?
+   "
+  );
 
-   $insertSubscription = $mysqli->prepare(
-     "INSERT INTO SUBSCRIBED values(?,?)"
-   );
+  $querySubscribed = $mysqli->prepare(
+   "SELECT count(*) AS is_sub
+   FROM SUBSCRIBED INNER JOIN CHANNELS
+    ON CHANNELS.id = SUBSCRIBED.CHANNELS_id
+   WHERE SUBSCRIBED.USERS_id=? AND CHANNELS.name=?"
+  );
 
-   $deleteSubscription = $mysqli->prepare(
-     "DELETE FROM SUBSCRIBED WHERE USERS_id=? AND CHANNELS_id=?"
-   );
+  $insertSubscription = $mysqli->prepare(
+   "INSERT INTO SUBSCRIBED values(?,?)"
+  );
+
+  $deleteSubscription = $mysqli->prepare(
+   "DELETE FROM SUBSCRIBED WHERE USERS_id=? AND CHANNELS_id=?"
+  );
 ?>
