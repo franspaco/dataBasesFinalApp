@@ -104,7 +104,7 @@
               $res = $queryUserFrontPage->get_result();
             }
             while($row = $res->fetch_assoc()){
-              echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
+              /*echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
                       <div class=\"post-card-text mdl-card__supporting-text\">"
                         . htmlentities($row['message']) .
                       "</div>
@@ -131,7 +131,45 @@
                       </div>
                         <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
                       </div>
-                    </div>";
+                    </div>";*/
+              ?>
+              <div class="mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card" id="post<?php $row['id']?>">
+                <div class="post-card-text mdl-card__supporting-text">
+                  <?php echo htmlentities($row['message']) ?>
+                </div>
+                <div class="mdl-card__actions">
+                <div class="likes-container">
+                  <i class="fa fa-heart likes-heart <?php echo (($row['likes']) ? "heart-red":"heart-gray") ?>"
+                    aria-hidden="true" onclick="likes(this,<?php echo $row['id'] . "," . $row['likes'] ?> )"></i>
+                  <span id="count<?php echo $row['id'] ?>" >
+                    <?php echo $row['total'] ?>
+                  </span>
+                  <form action="#post<?php echo $row['id']?>" style="display: inline-block; margin-left: 20px;">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable share-line">
+                    <label class="mdl-button mdl-js-button mdl-button--icon" for="share<?php echo $row['id']?>">
+                      <i class="material-icons">share</i>
+                    </label>
+                    <div class="mdl-textfield__expandable-holder">
+                      <input class="mdl-textfield__input" type="text" id="share<?php echo $row['id']?>">
+                      <label class="mdl-textfield__label" for="sample-expandable">Expandable Input</label>
+                    </div>
+                  </div>
+                </form>
+                </div>
+                <div class="author-tag">
+                  by
+                  <a class="hvr-underline-reveal author-name" href="user.php?=<?php echo htmlentities($row['username'])?>">
+                    <?php echo htmlentities($row['username'])?>
+                  </a>
+                  on <?php echo $row['timestamp']?> | posted in
+                  <a class="hvr-underline-reveal author-name" href="channel.php?ch=<?php echo $row['name'] ?>">
+                    <?php echo $row['name'] ?>
+                  </a>
+                </div>
+                  <a href="post.php?post=<?php echo $row['id']?>"  class="mdl-button">Permalink</a>
+                </div>
+              </div>
+              <?php
             }
             ?>
           </section>

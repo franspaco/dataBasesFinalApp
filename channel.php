@@ -156,6 +156,16 @@
                             <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
                           </div>
                         </div>";
+                        ?>
+                        <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="btn3">
+                          <i class="material-icons">more_vert</i>
+                        </button>
+                        <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right" for="btn3">
+                          <li class="mdl-menu__item">Lorem</li>
+                          <li class="mdl-menu__item" disabled>Ipsum</li>
+                          <li class="mdl-menu__item">Dolor</li>
+                        </ul>
+                        <?php
                 }
               }else{
                 echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
