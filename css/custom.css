@@ -122,5 +122,34 @@ div h3 a {
 .share-line{
   margin: 0;
   padding-top: 2px;
-  padding-bottom: 2px;: 
+  padding-bottom: 2px;:
+}
+
+.mdl-navigation__spacer {
+    color: #424242;
+    text-decoration: none;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: 0;
+    opacity: .87
+
+}
+
+.mdl-layout__drawer .mdl-navigation .mdl-navigation__spacer {
+    display: block;
+    -webkit-flex-shrink: 0;
+    -ms-flex-negative: 0;
+    flex-shrink: 0;
+    padding-left: 10px;
+    padding-top: 15px;
+    margin: 0;
+    color: #757575
+}
+
+.index-link{
+  color: white;
+  text-decoration: none;
+  font-size: 30px;
 }

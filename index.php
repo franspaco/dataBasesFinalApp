@@ -53,7 +53,7 @@
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-      <header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
+      <!--<header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
         </div>
         <div class="mdl-layout--large-screen-only mdl-layout__header-row">
@@ -89,7 +89,45 @@
             }
           ?>
         </div>
+      </header>-->
+      <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+          <!-- Title -->
+          <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>
+          <!-- Add spacer, to align navigation to the right -->
+          <div class="mdl-layout-spacer"></div>
+          <!-- Navigation. We hide it in small screens. -->
+          <nav class="mdl-navigation mdl-layout--large-screen-only">
+            <?php
+              if($_loggedIn){
+                ?> <a class="mdl-navigation__link" href="logout.php">LOGOUT</a> <?php
+              }else{
+                ?> <a class="mdl-navigation__link" href="login.php">LOGIN</a> <?php
+              }
+            ?>
+          </nav>
+        </div>
       </header>
+      <div class="mdl-layout__drawer">
+        <nav class="mdl-navigation">
+          <a class="mdl-navigation__link hvr-icon-forward" href="guide.php">Channel Guide</a>
+          <?php
+            if($_loggedIn){
+              ?> <span class="mdl-navigation__spacer">My channels:</span> <?php
+              $queryUserSubscribed->bind_param("s", $_SESSION['userID']);
+              $queryUserSubscribed->execute();
+              $res = $queryUserSubscribed->get_result();
+            }else{
+              ?> <span class="mdl-navigation__spacer">Default:</span> <?php
+              $queryDefaultChannels->execute();
+              $res = $queryDefaultChannels->get_result();
+            }
+            while($row = $res->fetch_assoc()){
+              echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-navigation__link hvr-icon-forward\">#". $row['name'] . "</a>";
+            }
+           ?>
+        </nav>
+      </div>
       <main class="mdl-layout__content">
         <div class="mdl-layout__tab-panel is-active" id="overview">
           <section class="section--center mdl-grid mdl-grid--no-spacing">
@@ -104,34 +142,6 @@
               $res = $queryUserFrontPage->get_result();
             }
             while($row = $res->fetch_assoc()){
-              /*echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                      <div class=\"post-card-text mdl-card__supporting-text\">"
-                        . htmlentities($row['message']) .
-                      "</div>
-                      <div class=\"mdl-card__actions\">
-                      <div class=\"likes-container\">
-                        <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
-                          aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $row['likes'] . ")\"></i>
-                        <span id=\"count" . $row['id'] . "\">" . $row['total'] .
-                        "</span>
-                      </div>
-                      <div class=\"author-tag\">
-                        by
-                        <a class=\"hvr-underline-reveal author-name\" href=\"user.php?="
-                          . htmlentities($row['username']) . "\">"
-                          . htmlentities($row['username']) .
-                        "</a>
-                        on "
-                        . $row['timestamp'] .
-                        " | posted in
-                        <a class=\"hvr-underline-reveal author-name\" href=\"channel.php?ch="
-                          . $row['name'] . "\">#"
-                          . $row['name'] .
-                        "</a>
-                      </div>
-                        <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
-                      </div>
-                    </div>";*/
               ?>
               <div class="mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card" id="post<?php $row['id']?>">
                 <div class="post-card-text mdl-card__supporting-text">
