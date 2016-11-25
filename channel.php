@@ -47,6 +47,10 @@
     <link rel="stylesheet" href="css/custom.css" />
     <link rel="stylesheet" href="css/hoover.css" />
     <link rel="stylesheet" href="css/styles.css">
+
+    <script src="js/dialog-polyfill.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" />
+
     <style>
     #view-source {
       position: fixed;
@@ -62,69 +66,8 @@
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-      <!--<header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
-        </div>
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
-          <h3 class="hvr-forward"><a href="index.php" class="pointer">chirper</a></h3>
-        </div>
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
-          <h5>#<?php echo $_ch ?></h5>
-        </div>
-        <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--primary-dark">
-          <a href="guide.php" class="mdl-layout__tab" id="current-channel"> Guide </span>
-          <?php
-            if(!$_loggedIn){
-              $queryDefaultChannels->execute();
-              $res = $queryDefaultChannels->get_result();
-              while($row = $res->fetch_assoc()){
-                echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
-              }
-              echo "
-                <div style=\"width: 100%;\">
-                  <a href=\"login.php\" class=\"mdl-layout__tab login-button\">LOGIN</a>
-                </div>";
-            }else{
-              $queryUserSubscribed->bind_param("s", $_SESSION['userID']);
-              $queryUserSubscribed->execute();
-              $res = $queryUserSubscribed->get_result();
-              while($row = $res->fetch_assoc()){
-                echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
-              }
-              ?>
-              <div style="width: 100%;">
-                <a href="logout.php" class="mdl-layout__tab login-button">LOGOUT</a>
-              </div>
-              <?php
-              if($chExists){
-              ?>
-                <button title="New Post" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent"
-                  id="add"
-                  onclick="redirectNewPost()">
-                  <i class="material-icons" role="presentation">create</i>
-                  <span class="visuallyhidden">Create</span>
-                </button>
-
-                <button title=" <?php echo ($is_sub)? "Unsubscribe": "Subscribe" ?> "
-                  class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent"
-                  id="subscribe"
-                  onclick="subscribe(this,'<?php echo $resCh . "'," . $is_sub ?>)">
-                  <i class="material-icons" role="presentation" id="subscribeIcon">notifications<?php echo ($is_sub)? "_off": "" ?></i>
-                  <span class="visuallyhidden">Notifications</span>
-                </button>
-                <script>
-                  function redirectNewPost() {
-                    document.location="post.php?new=<?php echo $_ch ?>";
-                  }
-                </script>
-              <?php
-              }
-            }
-          ?>
-        </div>
-      </header>-->
-      <header class="mdl-layout__header">
-        <div class="mdl-layout__header-row">
+      <header class="mdl-layout__header scroll">
+        <div class="mdl-layout__header-row scroll">
           <!-- Title -->
           <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>
           <!-- Add spacer, to align navigation to the right -->
@@ -136,9 +79,18 @@
             <?php
               if($_loggedIn){
                 ?>
-                  <span class="mdl-navigation__link sub">
+                  <span class="mdl-navigation__link pointer" onclick="redirectNewPost()">
+                    <i class="material-icons" role="presentation">create</i>
+                    <span>New</span>
+                  </span>
+                  <script>
+                    function redirectNewPost() {
+                      document.location="post.php?new=<?php echo $_ch ?>";
+                    }
+                  </script>
+                  <span class="mdl-navigation__link sub pointer" onclick="subscribe(this,'<?php echo $resCh . "'," . $is_sub ?>)">
                     <i class="material-icons" role="presentation" id="subscribeIcon">notifications<?php echo ($is_sub)? "_off": "" ?></i>
-                    <?php echo ($is_sub)? "Unsubscribe": "Subscribe" ?>
+                    <span id="subscribeText"><?php echo ($is_sub)? "Unsubscribe": "Subscribe" ?></span>
                   </span>
                   <a class="mdl-navigation__link" href="logout.php">LogOut</a>
                 <?php
@@ -174,66 +126,80 @@
       </div>
       <main class="mdl-layout__content">
         <div class="mdl-layout__tab-panel is-active" id="overview">
-          <section class="section--center mdl-grid mdl-grid--no-spacing">
-            <?php
+          <?php
             if($chExists){
               $queryPosts->bind_param("ssss", $userId, $null, $_ch, $null);
               $queryPosts->execute();
               $res = $queryPosts->get_result();
               if($res->num_rows > 0){
                 while($row = $res->fetch_assoc()){
-                  echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                          <div class=\"post-card-text mdl-card__supporting-text\">"
-                            . htmlentities($row['message']) .
-                          "</div>
-                          <div class=\"mdl-card__actions\">
-                          <div class=\"likes-container\">
-                            <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
-                              aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $row['likes'] . ")\"></i>
-                            <span id=\"count" . $row['id'] . "\">" . $row['total'] .
-                            "</span>
+                  ?>
+                    <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="post<?php echo $row['id']?>">
+                      <div class="mdl-card mdl-cell mdl-cell--12-col">
+                        <div class="mdl-card__supporting-text post-card-text" id="content<?php echo $row['id']?>">
+                          <?php echo nl2br(htmlentities($row['message'])) ?>
+                        </div>
+                        <div class="mdl-card__actions">
+                          <div class="likes-container">
+                            <i class="fa fa-heart likes-heart <?php echo (($row['likes']) ? "heart-red":"heart-gray") ?>"
+                              aria-hidden="true" onclick="likes(this,<?php echo $row['id'] . "," . $row['likes'] ?> )"></i>
+                            <span id="count<?php echo $row['id'] ?>" >
+                              <?php echo $row['total'] ?>
+                            </span>
                           </div>
-                          <div class=\"author-tag\">
+                          <div class="author-tag">
                             by
-                            <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
-                              . htmlentities($row['username']) . "\">"
-                              . htmlentities($row['username']) .
-                            "</a>
-                            on "
-                            . $row['timestamp'] .
-                          "</div>
-                            <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
+                            <a class="hvr-underline-reveal author-name" href="user.php?user=<?php echo htmlentities($row['username'])?>">
+                              <?php echo htmlentities($row['username'])?>
+                            </a>
+                            on <?php echo $row['timestamp']?>
                           </div>
-                        </div>";
-                        ?>
-                        <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="btn3">
-                          <i class="material-icons">more_vert</i>
-                        </button>
-                        <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right" for="btn3">
-                          <li class="mdl-menu__item">Lorem</li>
-                          <li class="mdl-menu__item" disabled>Ipsum</li>
-                          <li class="mdl-menu__item">Dolor</li>
-                        </ul>
+                          <a href="post.php?post=<?php echo $row['id']?>"  class="mdl-button">Permalink</a>
+                        </div>
+                      </div>
+                      <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="opt<?php echo $row['id']?>">
+                        <i class="material-icons">more_vert</i>
+                      </button>
+                      <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right" for="opt<?php echo $row['id']?>">
                         <?php
+                          if($row['owner'] == $userId){
+                           ?>
+                              <li class="mdl-menu__item" onclick="deletePost(this,<?php echo $row['id']?>)">Delete</li>
+                            <?php
+                          }
+                        ?>
+                        <li class="mdl-menu__item hvr-icon-float-away share" onclick="openShareDialogue(<?php echo $row['id']?>)">Share</li>
+                      </ul>
+                    </section>
+                  <?php
                 }
               }else{
-                echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                        <div class=\"post-card-text mdl-card__supporting-text\">
-                        No one has posted here yet...
-                        </div>
-                        <div class=\"mdl-card__actions\">
-                          <a href=\"index.php\" class=\"mdl-button\">GO BACK</a>";
+                ?>
+                <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
+                  <div class="mdl-card mdl-cell mdl-cell--12-col">
+                    <div class="post-card-text mdl-card__supporting-text">
+                      No one has posted here yet...
+                    </div>
+                    <div class="mdl-card__actions">
+                      <a href="index.php" class="mdl-button">GO BACK</a>
+                    </div>
+                </section>
+                <?php
               }
             }else{
-              echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                      <div class=\"post-card-text mdl-card__supporting-text\">
+              ?>
+              <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
+                <div class="mdl-card mdl-cell mdl-cell--12-col">
+                    <div class="post-card-text mdl-card__supporting-text">
                       Uh oh... no channel found. 404!!1!
-                      </div>
-                      <div class=\"mdl-card__actions\">
-                        <a href=\"index.php\" class=\"mdl-button\">GO BACK</a>";
+                    </div>
+                    <div class="mdl-card__actions">
+                      <a href="index.php" class="mdl-button">GO BACK</a>
+                    </div>
+                </section>
+              <?php
             }
-            ?>
-          </section>
+          ?>
         </div>
       </main>
     </div>

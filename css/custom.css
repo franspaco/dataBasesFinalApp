@@ -34,6 +34,7 @@ div h3 a {
   /*margin: 20px !important;*/
   font-size: 1.4rem!important;
   margin-bottom: 10px;
+  line-height: 1.6rem;
 }
 
 .author-tag{
@@ -73,6 +74,7 @@ div h3 a {
   /* Rules below not implemented in browsers yet */
   -o-user-select: none;
   user-select: none;
+  vertical-align: middle;
 }
 
 .likes-heart{
@@ -152,4 +154,32 @@ div h3 a {
   color: white;
   text-decoration: none;
   font-size: 30px;
+}
+
+.sender-name{
+  text-decoration: none;
+  color: #00BCD4;
+}
+
+.new-badge {
+    position: absolute;
+    right: 18px;
+    top: -5px;
+    padding: 2px 3px;
+    border-radius: 2px;
+    background: #fe6363;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.scroll {
+  white-space: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+.share-permalink{
+  font-size: 13pt;
 }

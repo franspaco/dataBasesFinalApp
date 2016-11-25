@@ -20,7 +20,7 @@ function likes(heart, post, action){
       }
     }
   }
-  request.open("POST","like.php",true);
+  request.open("POST","api/like.php",true);
   request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   request.send("post=" + post + "&action=" + action);
 }
@@ -32,19 +32,41 @@ function subscribe(button, channel, action){
     if (request.readyState == XMLHttpRequest.DONE) {
       if(request.responseText == "1"){
         var icon = document.getElementById("subscribeIcon");
+        var text = document.getElementById("subscribeText");
         if(action == 0){
           icon.innerHTML = "notifications_off";
-          button.setAttribute("title","Unsubscribe");
+          text.innerHTML = "Unsubscribe";
           button.setAttribute("onclick","subscribe(this,'" + channel + "',1)");
         }else if(action == 1){
           icon.innerHTML = "notifications";
-          button.setAttribute("title","Subscribe");
+          text.innerHTML = "Subscribe";
           button.setAttribute("onclick","subscribe(this,'" + channel + "',0)");
         }
       }
     }
   }
-  request.open("POST","subscribe.php",true);
+  request.open("POST","api/subscribe.php",true);
   request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   request.send("channel=" + channel + "&action=" + action);
+}
+
+function deletePost(button, post){
+  var request = new XMLHttpRequest();
+  request.onreadystatechange = function() {
+    if (request.readyState == XMLHttpRequest.DONE) {
+      console.log(request.responseText);
+      if(request.responseText == "1"){
+        button.classList.remove("error");
+        button.innerHTML = "Deleted!";
+        var posthtml = document.getElementById('post'+post);
+        posthtml.style.display = 'none';
+      }else{
+        button.classList.add("error");
+        button.innerHTML = "Failed!";
+      }
+    }
+  }
+  request.open("POST","api/delete.php",true);
+  request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  request.send("post=" + post);
 }

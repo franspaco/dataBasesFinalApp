@@ -4,10 +4,10 @@
   if(isset($_POST['loginUsername']) && isset($_POST['loginPassword'])){
     $usernm = $_POST['loginUsername'];
     $passwd = $_POST['loginPassword'];
-    $queryLoginData->bind_param("s", $usernm);
-    $queryLoginData->execute();
-    $row = $queryLoginData->get_result()->fetch_assoc();
-    $queryLoginData->close();
+    $queryUserData->bind_param("s", $usernm);
+    $queryUserData->execute();
+    $row = $queryUserData->get_result()->fetch_assoc();
+    $queryUserData->close();
 
     if(isset($row)){
       if(password_verify($passwd, $row['password'])){
@@ -81,7 +81,7 @@
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-      <header class="mdl-layout__header">
+      <header class="mdl-layout__header scroll">
         <div class="mdl-layout__header-row">
           <!-- Title -->
           <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>

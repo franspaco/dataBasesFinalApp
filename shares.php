@@ -38,6 +38,10 @@
     <link rel="stylesheet" href="css/custom.css" />
     <link rel="stylesheet" href="css/hoover.css" />
     <link rel="stylesheet" href="css/styles.css">
+
+    <script src="js/dialog-polyfill.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" />
+
     <style>
     #view-source {
       position: fixed;
@@ -53,7 +57,7 @@
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-      <header class="mdl-layout__header">
+      <header class="mdl-layout__header scroll">
         <div class="mdl-layout__header-row">
           <!-- Title -->
           <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>
@@ -78,7 +82,6 @@
           <a class="mdl-navigation__link hvr-icon-forward" href="guide.php">Channel Guide</a>
           <?php
             if($_loggedIn){
-              $inbox = 15;
               ?>
                 <a class="mdl-navigation__link hvr-icon-forward" href="shares.php">Shared with me <?php echo ($inbox > 0) ? "(" . $inbox .")" : ""; ?></a>
                 <span class="mdl-navigation__spacer">My channels:</span>
@@ -101,54 +104,38 @@
         <div class="mdl-layout__tab-panel is-active" id="overview">
           <section class="section--center mdl-grid mdl-grid--no-spacing">
             <?php
-            if(!$_loggedIn){
-              $queryPosts->bind_param("isss", $userId, $null, $null, $null);
-              $queryPosts->execute();
-              $res = $queryPosts->get_result();
-            }else{
-              $queryUserFrontPage->bind_param("ss", $userId, $userId);
-              $queryUserFrontPage->execute();
-              $res = $queryUserFrontPage->get_result();
-            }
-            while($row = $res->fetch_assoc()){
-              ?>
-              <div class="mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card" id="post<?php $row['id']?>">
-                <div class="post-card-text mdl-card__supporting-text">
-                  <?php echo htmlentities($row['message']) ?>
-                </div>
-                <div class="mdl-card__actions">
-                <div class="likes-container">
-                  <i class="fa fa-heart likes-heart <?php echo (($row['likes']) ? "heart-red":"heart-gray") ?>"
-                    aria-hidden="true" onclick="likes(this,<?php echo $row['id'] . "," . $row['likes'] ?> )"></i>
-                  <span id="count<?php echo $row['id'] ?>" >
-                    <?php echo $row['total'] ?>
-                  </span>
-                  <form action="#post<?php echo $row['id']?>" style="display: inline-block; margin-left: 20px;">
-                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable share-line">
-                    <label class="mdl-button mdl-js-button mdl-button--icon" for="share<?php echo $row['id']?>">
-                      <i class="material-icons">share</i>
-                    </label>
-                    <div class="mdl-textfield__expandable-holder">
-                      <input class="mdl-textfield__input" type="text" id="share<?php echo $row['id']?>">
-                      <label class="mdl-textfield__label" for="sample-expandable">Expandable Input</label>
-                    </div>
+            if($_loggedIn){
+              $queryInbox->bind_param("s", $userId);
+              $queryInbox->execute();
+              $res = $queryInbox->get_result();
+              while($row = $res->fetch_assoc()){
+                $updateSeen->bind_param("s", $row['id']);
+                $updateSeen->execute();
+                ?>
+                <div class="mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card" id="post<?php $row['id']?>">
+                  <div class="post-card-text mdl-card__supporting-text">
+                    <h4>
+                      <a href="user.php?user=<?php echo htmlentities($row['username']) ?>" class="hvr-underline-reveal sender-name">
+                        <?php echo htmlentities($row['username']) ?>
+                      </a>
+                      shared a post with you:
+                      <?php
+                        if(!$row['seen']){
+                          echo "<div class=\"new-badge\">New</div>";
+                        }
+                      ?>
+                    </h4>
+                    <?php echo nl2br(htmlentities($row['message'])) ?>
                   </div>
-                </form>
+                  <div class="mdl-card__actions">
+                    <div class="author-tag">
+                      Received on <?php echo $row['sent']?>
+                    </div>
+                    <a href="post.php?post=<?php echo $row['post']?>"  class="mdl-button share-permalink">Check it out</a>
+                  </div>
                 </div>
-                <div class="author-tag">
-                  by
-                  <a class="hvr-underline-reveal author-name" href="user.php?=<?php echo htmlentities($row['username'])?>">
-                    <?php echo htmlentities($row['username'])?>
-                  </a>
-                  on <?php echo $row['timestamp']?> | posted in
-                  <a class="hvr-underline-reveal author-name" href="channel.php?ch=<?php echo $row['name'] ?>">
-                    <?php echo $row['name'] ?>
-                  </a>
-                </div>
-                  <a href="post.php?post=<?php echo $row['id']?>"  class="mdl-button">Permalink</a>
-                </div>
-              </div>
-              <?php
+                <?php
+              }
             }
             ?>
           </section>

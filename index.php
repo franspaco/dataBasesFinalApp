@@ -38,6 +38,10 @@
     <link rel="stylesheet" href="css/custom.css" />
     <link rel="stylesheet" href="css/hoover.css" />
     <link rel="stylesheet" href="css/styles.css">
+
+    <script src="js/dialog-polyfill.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" />
+
     <style>
     #view-source {
       position: fixed;
@@ -49,48 +53,43 @@
       z-index: 900;
     }
     </style>
-    <?php echo ($_loggedIn) ? "<script src=\"js/like.js\"></script>" : ""; ?>
+    <?php
+      if($_loggedIn) {
+        ?> <script src="js/like.js"></script> <?php
+      }
+    ?>
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
+    <dialog class="mdl-dialog">
+      <h5 class="mdl-dialog__title">Share post</h5>
+      <div class="mdl-dialog__content">
+        <form action="#">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="share-with">
+            <label class="mdl-textfield__label" for="share-with">Share with...</label>
+          </div>
+          <div class="mdl-textfield mdl-js-textfield">
+            <textarea class="mdl-textfield__input" type="text" rows= "2" id="share-with-message" ></textarea>
+            <label class="mdl-textfield__label" for="share-with-message">Message...</label>
+          </div>
+        </form>
+        Sharing:
+        <div class="" id="post-to-share"></div>
+        <div class="error" id="share-error"></div>
+      </div>
+      <div class="mdl-dialog__actions">
+        <button type="button" class="mdl-button send">Share</button>
+        <button type="button" class="mdl-button close">Cancel</button>
+      </div>
+    </dialog>
+    <script>
+      var dialog = document.querySelector('dialog');
+      if (! dialog.showModal) {
+        dialogPolyfill.registerDialog(dialog);
+      }
+    </script>
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-      <!--<header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
-        </div>
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
-          <h3 class="hvr-forward"><a href="index.php" class="pointer">chirper</a></h3>
-        </div>
-        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
-          <h5>Front Page</h5>
-        </div>
-        <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--primary-dark">
-          <a href="guide.php" class="mdl-layout__tab" id="current-channel"> Guide </span>
-          <?php
-            if(!$_loggedIn){
-              $queryDefaultChannels->execute();
-              $res = $queryDefaultChannels->get_result();
-              while($row = $res->fetch_assoc()){
-                echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
-              }
-              echo "
-                <div style=\"width: 100%;\">
-                  <a href=\"login.php\" class=\"mdl-layout__tab login-button\">LOGIN</a>
-                </div>";
-            }else{
-              $queryUserSubscribed->bind_param("s", $_SESSION['userID']);
-              $queryUserSubscribed->execute();
-              $res = $queryUserSubscribed->get_result();
-              while($row = $res->fetch_assoc()){
-                echo "<a href=\"channel.php?ch=" . $row['name'] . "\" class=\"mdl-layout__tab\">#". $row['name'] . "</a>";
-              }
-              echo "
-                <div style=\"width: 100%;\">
-                  <a href=\"logout.php\" class=\"mdl-layout__tab login-button\">LOGOUT</a>
-                </div>";
-            }
-          ?>
-        </div>
-      </header>-->
-      <header class="mdl-layout__header">
+      <header class="mdl-layout__header scroll">
         <div class="mdl-layout__header-row">
           <!-- Title -->
           <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>
@@ -115,7 +114,6 @@
           <a class="mdl-navigation__link hvr-icon-forward" href="guide.php">Channel Guide</a>
           <?php
             if($_loggedIn){
-              $inbox = 15;
               ?>
                 <a class="mdl-navigation__link hvr-icon-forward" href="shares.php">Shared with me <?php echo ($inbox > 0) ? "(" . $inbox .")" : ""; ?></a>
                 <span class="mdl-navigation__spacer">My channels:</span>
@@ -135,7 +133,7 @@
         </nav>
       </div>
       <main class="mdl-layout__content">
-        <div class="mdl-layout__tab-panel is-active" id="overview">
+        <div class="mdl-layout__tab-panel is-active mdl-demo" id="overview">
           <?php
           if(!$_loggedIn){
             $queryPosts->bind_param("isss", $userId, $null, $null, $null);
@@ -147,12 +145,12 @@
             $res = $queryUserFrontPage->get_result();
           }
           while($row = $res->fetch_assoc()){
-            var_dump($row);
+            //var_dump($row);
             ?>
               <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="post<?php echo $row['id']?>">
                 <div class="mdl-card mdl-cell mdl-cell--12-col">
-                  <div class="mdl-card__supporting-text">
-                    <?php echo htmlentities($row['message']) ?>
+                  <div class="mdl-card__supporting-text post-card-text" id="content<?php echo $row['id']?>">
+                    <?php echo nl2br(htmlentities($row['message'])) ?>
                   </div>
                   <div class="mdl-card__actions">
                     <div class="likes-container">
@@ -161,46 +159,33 @@
                       <span id="count<?php echo $row['id'] ?>" >
                         <?php echo $row['total'] ?>
                       </span>
-                      <form action="#post<?php echo $row['id']?>" style="display: inline-block; margin-left: 20px;">
-                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable share-line">
-                        <label class="mdl-button mdl-js-button mdl-button--icon" for="share<?php echo $row['id']?>">
-                          <i class="material-icons">share</i>
-                        </label>
-                        <div class="mdl-textfield__expandable-holder">
-                          <input class="mdl-textfield__input" type="text" id="share<?php echo $row['id']?>">
-                          <label class="mdl-textfield__label" for="sample-expandable">Expandable Input</label>
-                        </div>
-                      </div>
-                    </form>
                     </div>
                     <div class="author-tag">
                       by
-                      <a class="hvr-underline-reveal author-name" href="user.php?=<?php echo htmlentities($row['username'])?>">
+                      <a class="hvr-underline-reveal author-name" href="user.php?user=<?php echo htmlentities($row['username'])?>">
                         <?php echo htmlentities($row['username'])?>
                       </a>
                       on <?php echo $row['timestamp']?> | posted in
                       <a class="hvr-underline-reveal author-name" href="channel.php?ch=<?php echo $row['name'] ?>">
-                        <?php echo $row['name'] ?>
+                        #<?php echo $row['name'] ?>
                       </a>
                     </div>
                     <a href="post.php?post=<?php echo $row['id']?>"  class="mdl-button">Permalink</a>
-                    <?php echo $row['POSTS.owner'] ?>
-                    <?php echo $userId ?>
                   </div>
                 </div>
-                <?php
-                  if($row['owner'] == $userId){
-                   ?>
-                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="opt<?php echo $row['id']?>">
-                      <i class="material-icons">more_vert</i>
-                    </button>
-                    <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right" for="opt<?php echo $row['id']?>">
-                      <li class="mdl-menu__item">Delete</li>
-                      <li class="mdl-menu__item">Share</li>
-                    </ul>
-                    <?php
-                  }
-                ?>
+                <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="opt<?php echo $row['id']?>">
+                  <i class="material-icons">more_vert</i>
+                </button>
+                <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right" for="opt<?php echo $row['id']?>">
+                  <?php
+                    if($row['owner'] == $userId){
+                     ?>
+                        <li class="mdl-menu__item" onclick="deletePost(this,<?php echo $row['id']?>)">Delete</li>
+                      <?php
+                    }
+                  ?>
+                  <li class="mdl-menu__item hvr-icon-float-away share" onclick="openShareDialogue(<?php echo $row['id']?>)">Share</li>
+                </ul>
               </section>
             <?php
           }
@@ -209,5 +194,6 @@
       </main>
     </div>
     <script src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+    <script src="js/share.js"></script>
   </body>
 </html>

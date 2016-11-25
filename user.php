@@ -39,6 +39,10 @@
     <link rel="stylesheet" href="css/custom.css" />
     <link rel="stylesheet" href="css/hoover.css" />
     <link rel="stylesheet" href="css/styles.css">
+
+    <script src="js/dialog-polyfill.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" />
+
     <style>
     #view-source {
       position: fixed;
@@ -54,7 +58,7 @@
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-      <header class="mdl-layout__header">
+      <header class="mdl-layout__header scroll">
         <div class="mdl-layout__header-row">
           <!-- Title -->
           <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>
@@ -99,44 +103,52 @@
       </div>
       <main class="mdl-layout__content">
         <div class="mdl-layout__tab-panel is-active" id="overview">
-          <section class="section--center mdl-grid mdl-grid--no-spacing">
-            <?php
+          <?php
             $queryPosts->bind_param("isss", $userId, $null, $null, $_usr);
             $queryPosts->execute();
             $res = $queryPosts->get_result();
 
             while($row = $res->fetch_assoc()){
-              echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                      <div class=\"post-card-text mdl-card__supporting-text\">"
-                        . htmlentities($row['message']) .
-                      "</div>
-                      <div class=\"mdl-card__actions\">
-                      <div class=\"likes-container\">
-                        <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
-                          aria-hidden=\"true\" " . (($_loggedIn)? "onclick=\"likes(this," . $row['id'] . "," . $row['likes'] . ")" : "" )  . "\"></i>
-                        <span id=\"count" . $row['id'] . "\">" . $row['total'] .
-                        "</span>
+              ?>
+                <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="post<?php echo $row['id']?>">
+                  <div class="mdl-card mdl-cell mdl-cell--12-col">
+                    <div class="mdl-card__supporting-text post-card-text" id="content<?php echo $row['id']?>">
+                      <?php echo nl2br(htmlentities($row['message'])) ?>
+                    </div>
+                    <div class="mdl-card__actions">
+                      <div class="likes-container">
+                        <i class="fa fa-heart likes-heart <?php echo (($row['likes']) ? "heart-red":"heart-gray") ?>"
+                          aria-hidden="true" onclick="likes(this,<?php echo $row['id'] . "," . $row['likes'] ?> )"></i>
+                        <span id="count<?php echo $row['id'] ?>" >
+                          <?php echo $row['total'] ?>
+                        </span>
                       </div>
-                      <div class=\"author-tag\">
-                        by
-                        <a class=\"hvr-underline-reveal author-name\" href=\"user.php?="
-                          . htmlentities($row['username']) . "\">"
-                          . htmlentities($row['username']) .
-                        "</a>
-                        on "
-                        . $row['timestamp'] .
-                        " | posted in
-                        <a class=\"hvr-underline-reveal author-name\" href=\"channel.php?ch="
-                          . $row['name'] . "\">#"
-                          . $row['name'] .
-                        "</a>
+                      <div class="author-tag">
+                        on <?php echo $row['timestamp']?> | posted in
+                        <a class="hvr-underline-reveal author-name" href="channel.php?ch=<?php echo $row['name'] ?>">
+                          #<?php echo $row['name'] ?>
+                        </a>
                       </div>
-                        <a href=\"post.php?post=". $row['id'] ."\" class=\"mdl-button\">Permalink</a>
-                      </div>
-                    </div>";
+                      <a href="post.php?post=<?php echo $row['id']?>"  class="mdl-button">Permalink</a>
+                    </div>
+                  </div>
+                  <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="opt<?php echo $row['id']?>">
+                    <i class="material-icons">more_vert</i>
+                  </button>
+                  <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right" for="opt<?php echo $row['id']?>">
+                    <?php
+                      if($row['owner'] == $userId){
+                       ?>
+                          <li class="mdl-menu__item" onclick="deletePost(this,<?php echo $row['id']?>)">Delete</li>
+                        <?php
+                      }
+                    ?>
+                    <li class="mdl-menu__item hvr-icon-float-away share" onclick="openShareDialogue(<?php echo $row['id']?>)">Share</li>
+                  </ul>
+                </section>
+              <?php
             }
-            ?>
-          </section>
+          ?>
         </div>
       </main>
     </div>

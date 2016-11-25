@@ -117,7 +117,7 @@
         </div>
       </header>-->
       <header class="mdl-layout__header">
-        <div class="mdl-layout__header-row">
+        <div class="mdl-layout__header-row  scroll">
           <!-- Title -->
           <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>
           <!-- Add spacer, to align navigation to the right -->
@@ -128,7 +128,18 @@
           <nav class="mdl-navigation mdl-layout--large-screen-only">
             <?php
               if($_loggedIn){
-                ?> <a class="mdl-navigation__link" href="logout.php">LOGOUT</a> <?php
+                ?>
+                  <span class="mdl-navigation__link pointer" onclick="redirectNewChannel()">
+                    <i class="material-icons" role="presentation">create</i>
+                    <span>New</span>
+                  </span>
+                  <script>
+                    function redirectNewChannel() {
+                      document.location="guide.php?new=channel";
+                    }
+                  </script>
+                  <a class="mdl-navigation__link" href="logout.php">LOGOUT</a>
+                <?php
               }else{
                 ?> <a class="mdl-navigation__link" href="login.php">LOGIN</a> <?php
               }

@@ -1,5 +1,6 @@
 <?php
-  include'php/header.php';
+  include'api_header.php';
+  
   $resCh = $_POST['channel'];
 
   if($_loggedIn){

@@ -20,7 +20,7 @@
     }else{
       $error = "Channel does not exist!";
     }
-    $_posting = !isset($error);
+    $_posting = isset($error);
   }
   if(!$_posting){
     if(isset($_postid)){
@@ -68,6 +68,10 @@
     <link rel="stylesheet" href="css/custom.css" />
     <link rel="stylesheet" href="css/hoover.css" />
     <link rel="stylesheet" href="css/styles.css">
+
+    <script src="js/dialog-polyfill.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" />
+
     <style>
     #view-source {
       position: fixed;
@@ -83,7 +87,7 @@
   </head>
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-      <header class="mdl-layout__header">
+      <header class="mdl-layout__header scroll">
         <div class="mdl-layout__header-row">
           <!-- Title -->
           <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>
@@ -128,91 +132,110 @@
       </div>
       <main class="mdl-layout__content">
         <div class="mdl-layout__tab-panel is-active" id="overview">
-          <section class="section--center mdl-grid mdl-grid--no-spacing">
-            <?php
-            if(!$_posting){
-              if(isset($rowPost)){
-                echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                        <div class=\"post-card-text mdl-card__supporting-text\">"
-                          . htmlentities($rowPost['message']) .
-                        "</div>
-                        <div class=\"mdl-card__actions\">
-                          <div class=\"likes-container\">
-                            <i class=\"fa fa-heart likes-heart " . (($rowPost['likes']) ? "heart-red":"heart-gray") . "\"
-                              aria-hidden=\"true\" onclick=\"likes(this," . $rowPost['id'] . "," . $rowPost['likes'] . ")\"></i>
-                            <span id=\"count" . $rowPost['id'] . "\">" . $rowPost['total'] .
-                            "</span>
-                          </div>
-                          <div class=\"author-tag\">
-                            by
-                            <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
-                              . htmlentities($rowPost['username']) . "\">"
-                              . htmlentities($rowPost['username']) .
-                            "</a>
-                            on "
-                            . $rowPost['timestamp'] .
-                            " | posted in
-                            <a class=\"hvr-underline-reveal author-name\" href=\"channel.php?ch="
-                              . $rowPost['name'] . "\">"
-                              . $rowPost['name'] .
-                            "</a>
-                          </div>
-                        </div>
-                      </div>";
-              } else {
-                echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
-                        <div class=\"post-card-text mdl-card__supporting-text\">
-                        Uh oh... no post found.
-                        </div>
-                        <div class=\"mdl-card__actions\">
-                          <a href=\"index.php\" class=\"mdl-button\">GO BACK</a>";
-              }
-            }else{
+          <?php
+          if(!$_posting){
+            if(isset($rowPost)){
               ?>
-              <div class="mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card">
-                <div class="mdl-card__supporting-text">
-              <?php
-              if($_loggedIn){
-              ?>
-                    <h4>New Post to #<?php echo $_GET['new'] ?> </h4>
-                    <form class="" action="post.php" method="post">
-                      <div id="counterDisp" style="color: #AAA;">Remaining: 500</div>
-                      <div class="mdl-textfield mdl-js-textfield">
-                        <textarea class="mdl-textfield__input" type="text" rows= "10" onkeyup="counter()" name="postContent" id="textArea1"></textarea>
-                        <label class="mdl-textfield__label" for="textArea1">Write here...</label>
+                <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="post<?php echo $rowPost['id']?>">
+                  <div class="mdl-card mdl-cell mdl-cell--12-col">
+                    <div class="mdl-card__supporting-text post-card-text" id="content<?php echo $rowPost['id']?>">
+                      <?php echo nl2br(htmlentities($rowPost['message'])) ?>
+                    </div>
+                    <div class="mdl-card__actions">
+                      <div class="likes-container">
+                        <i class="fa fa-heart likes-heart <?php echo (($rowPost['likes']) ? "heart-red":"heart-gray") ?>"
+                          aria-hidden="true" onclick="likes(this,<?php echo $rowPost['id'] . "," . $rowPost['likes'] ?> )"></i>
+                        <span id="count<?php echo $rowPost['id'] ?>" >
+                          <?php echo $rowPost['total'] ?>
+                        </span>
                       </div>
-                      <input type="hidden" name="dest" value="<?php echo $_GET['new']; ?>">
-                      <div>
-                        <input type="submit" class="hvr-fade login-submit-en" id="login-submit">
+                      <div class="author-tag">
+                        by
+                        <a class="hvr-underline-reveal author-name" href="user.php?user=<?php echo htmlentities($rowPost['username'])?>">
+                          <?php echo htmlentities($rowPost['username'])?>
+                        </a>
+                        on <?php echo $rowPost['timestamp']?> | posted in
+                        <a class="hvr-underline-reveal author-name" href="channel.php?ch=<?php echo $rowPost['name'] ?>">
+                          #<?php echo $rowPost['name'] ?>
+                        </a>
                       </div>
-                    </form>
-                    <span class="error"><?php echo $error; ?></span>
-                    <script type="text/javascript">
-                      function counter(){
-                        var max = 500;
-                        var field = document.getElementById("textArea1");
-                        var disp = document.getElementById("counterDisp");
-                        if(field.value.length > max){
-                          field.value = field.value.substring(0, max);
-                        }else{
-                          disp.innerHTML = "Remaining: " + (max - field.value.length);
-                        }
-                      }
-                    </script>
-              <?php
-              }else{
-                ?>
-                <h4>You need to log in to post</h4>
-                <a href="login.php">Log In</a>
-                <?php
-              }
-              ?>
+                    </div>
                   </div>
-                </div>
-                <?php
+                  <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="opt<?php echo $rowPost['id']?>">
+                    <i class="material-icons">more_vert</i>
+                  </button>
+                  <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right" for="opt<?php echo $rowPost['id']?>">
+                    <?php
+                      if($rowPost['owner'] == $userId){
+                       ?>
+                          <li class="mdl-menu__item" onclick="deletePost(this,<?php echo $rowPost['id']?>)">Delete</li>
+                        <?php
+                      }
+                    ?>
+                    <li class="mdl-menu__item hvr-icon-float-away share" onclick="openShareDialogue(<?php echo $rowPost['id']?>)">Share</li>
+                  </ul>
+                </section>
+              <?php
+            } else {
+              ?>
+              <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
+                <div class="mdl-card mdl-cell mdl-cell--12-col">
+                  <div class="post-card-text mdl-card__supporting-text">
+                    Uh oh... no post found.
+                  </div>
+                  <div class="mdl-card__actions">
+                    <a href="index.php" class="mdl-button">GO BACK</a>
+                  </div>
+              </section>
+              <?php
             }
+          }else{
             ?>
-          </section>
+              <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="post<?php echo $rowPost['id']?>">
+                <div class="mdl-card mdl-cell mdl-cell--12-col">
+                  <div class="mdl-card__supporting-text post-card-text" id="content<?php echo $rowPost['id']?>">
+                    <?php
+                      if($_loggedIn){
+                        ?>
+                          <h4>New Post to #<?php echo $_GET['new'] ?> </h4>
+                          <form class="" action="post.php" method="post">
+                            <div id="counterDisp" style="color: #AAA;">Remaining: 500</div>
+                            <div class="mdl-textfield mdl-js-textfield">
+                              <textarea class="mdl-textfield__input" type="text" rows= "10" onkeyup="counter()" name="postContent" id="textArea1"></textarea>
+                              <label class="mdl-textfield__label" for="textArea1">Write here...</label>
+                            </div>
+                            <input type="hidden" name="dest" value="<?php echo $_GET['new']; ?>">
+                            <div>
+                              <input type="submit" class="hvr-fade login-submit-en" id="login-submit">
+                            </div>
+                          </form>
+                          <span class="error"><?php echo $error; ?></span>
+                          <script type="text/javascript">
+                            function counter(){
+                              var max = 500;
+                              var field = document.getElementById("textArea1");
+                              var disp = document.getElementById("counterDisp");
+                              if(field.value.length > max){
+                                field.value = field.value.substring(0, max);
+                              }else{
+                                disp.innerHTML = "Remaining: " + (max - field.value.length);
+                              }
+                            }
+                          </script>
+                        <?php
+                      }else{
+                        ?>
+                          <h4>You need to log in to post</h4>
+                          <a href="login.php" class="mdl-button">Log In</a>
+                        <?php
+                      }
+                      ?>
+                    </div>
+                  </div>
+                </section>
+              <?php
+            }
+          ?>
         </div>
       </main>
     </div>

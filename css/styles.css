@@ -106,9 +106,12 @@ html, body {
   z-index: 999;
 }
 
-.mdl-demo .mdl-layout__content section:not(:last-of-type) {
+.mdl-demo .mdl-layout__content section{
   position: relative;
-  margin-bottom: 48px;
+}
+
+.mdl-demo .mdl-layout__content section:not(:last-of-type) {
+  margin-bottom: 20px;
 }
 .mdl-demo section.section--center {
   max-width: 860px;

@@ -2,12 +2,13 @@
   session_start();
   $_loggedIn = !empty($_SESSION['LoggedIn']) && !empty($_SESSION['username']) && $_SESSION['LoggedIn'];
 
-  $_config = parse_ini_file("../php_files/config.php.ini");
+  $_config = isset($_config)? $_config : parse_ini_file("../php_files/config.php.ini");
   $mysqli = new mysqli("localhost", $_config['mysqluser'], $_config['mysqlpass'], $_config['mysqlDB']);
 
   $userId = isset($_SESSION['userID']) ? $_SESSION['userID'] : 0;
 
   $null = NULL;
+
   //POST QUERY *****************************************************************
   //usr, post, chann
   $queryPosts = $mysqli->prepare(
@@ -32,7 +33,7 @@
 
   //FRONT PAGE *****************************************************************
   $queryUserFrontPage = $mysqli->prepare(
-    "SELECT USERS.username, POSTS.id, POSTS.message, POSTS.timestamp, CHANNELS.name, coalesce(likesCount, 0) as total, coalesce(usrLikes, 0) as likes
+    "SELECT USERS.username, POSTS.id, POSTS.owner, POSTS.message, POSTS.timestamp, CHANNELS.name, coalesce(likesCount, 0) as total, coalesce(usrLikes, 0) as likes
      FROM SUBSCRIBED INNER JOIN CHANNELS ON CHANNELS.id = SUBSCRIBED.CHANNELS_id INNER JOIN POSTS
         ON POSTS.channel = CHANNELS.id INNER JOIN USERS
 		      ON USERS.id = POSTS.owner LEFT JOIN
@@ -71,7 +72,7 @@
   );
 
   //LOGIN CHECKING / CREATION *************************************************
-  $queryLoginData = $mysqli->prepare(
+  $queryUserData = $mysqli->prepare(
    "SELECT *
    FROM USERS
    WHERE username=?
@@ -100,7 +101,7 @@
    "DELETE FROM LIKES WHERE USERS_id=? AND POSTS_id=?"
   );
 
-  //SUBSCRIPTION CHECKING / INSERTION / DELETION ******************************
+  //SUBSCRIPTION CHECKING / INSERTION / DELETION *******************************
   $queryUserSubscribed = $mysqli->prepare(
    "SELECT CHANNELS_id, name
    FROM SUBSCRIBED INNER JOIN CHANNELS
@@ -123,4 +124,37 @@
   $deleteSubscription = $mysqli->prepare(
    "DELETE FROM SUBSCRIBED WHERE USERS_id=? AND CHANNELS_id=?"
   );
+
+  //SHARES INSERT/QUERY ********************************************************
+
+  $insertShare = $mysqli->prepare(
+    "INSERT IGNORE INTO SHARES (sender, receiver, message, post) values (?, ?, ?, ?)"
+  );
+
+  $queryInboxTotal = $mysqli->prepare(
+    "SELECT count(*) AS unseen
+    FROM SHARES
+    WHERE seen=0 AND receiver=?"
+  );
+
+  $queryInbox = $mysqli->prepare(
+    "SELECT SHARES.id, SHARES.message, SHARES.post, SHARES.seen, SHARES.sent, USERS.username
+    FROM SHARES
+    INNER JOIN USERS    ON SHARES.sender = USERS.id
+    INNER JOIN POSTS    ON SHARES.post   = POSTS.id
+    WHERE receiver=?
+    ORDER BY SHARES.sent DESC"
+  );
+
+  $updateSeen = $mysqli->prepare(
+    "UPDATE SHARES SET seen=1 WHERE id=?"
+  );
+
+  //COMMON STUFF ***************************************************************
+  if($_loggedIn){
+    //Get inbox size
+    $queryInboxTotal->bind_param("s", $userId);
+    $queryInboxTotal->execute();
+    $inbox = $queryInboxTotal->get_result()->fetch_assoc()['unseen'];
+  }
 ?>
