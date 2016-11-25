@@ -17,7 +17,7 @@
         $_loggedIn = true;
         echo "<script>document.location = \"index.php\"</script>";
       }else{
-        $error = "Hash Failed!";
+        $error = "Wrong username or password!";
       }
     }else{
       $error = "Wrong username or password!";
@@ -87,6 +87,8 @@
           <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>
           <!-- Add spacer, to align navigation to the right -->
           <div class="mdl-layout-spacer"></div>
+          <span class="mdl-layout-title index-link">Login</span>
+          <div class="mdl-layout-spacer"></div>
           <!-- Navigation. We hide it in small screens. -->
           <nav class="mdl-navigation mdl-layout--large-screen-only">
             <?php
@@ -104,7 +106,10 @@
           <a class="mdl-navigation__link hvr-icon-forward" href="guide.php">Channel Guide</a>
           <?php
             if($_loggedIn){
-              ?> <span class="mdl-navigation__spacer">My channels:</span> <?php
+              ?>
+                <a class="mdl-navigation__link hvr-icon-forward" href="shares.php">Shared with me <?php echo ($inbox > 0) ? "(" . $inbox .")" : ""; ?></a>
+                <span class="mdl-navigation__spacer">My channels:</span>
+              <?php
               $queryUserSubscribed->bind_param("s", $_SESSION['userID']);
               $queryUserSubscribed->execute();
               $res = $queryUserSubscribed->get_result();

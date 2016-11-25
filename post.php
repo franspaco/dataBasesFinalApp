@@ -4,7 +4,6 @@
   $_postid = $_GET['post'];
 
   if(!empty($_POST['dest']) && !empty($_POST['postContent']) && $_loggedIn){
-    $_posting = false;
     $queryChannelId->bind_param("s", $_POST['dest']);
     $queryChannelId->execute();
     $resCh = $queryChannelId->get_result();
@@ -21,13 +20,14 @@
     }else{
       $error = "Channel does not exist!";
     }
+    $_posting = !isset($error);
   }
   if(!$_posting){
     if(isset($_postid)){
       $queryPosts->bind_param("isss", $userId, $_postid, $null, $null);
       $queryPosts->execute();
       $res = $queryPosts->get_result();
-      $row = $res->fetch_assoc();
+      $rowPost = $res->fetch_assoc();
     }
   }
  ?>
@@ -89,6 +89,8 @@
           <span class="mdl-layout-title"><a href="index.php" class="index-link">chirper</a></span>
           <!-- Add spacer, to align navigation to the right -->
           <div class="mdl-layout-spacer"></div>
+          <span class="mdl-layout-title index-link">Post</span>
+          <div class="mdl-layout-spacer"></div>
           <!-- Navigation. We hide it in small screens. -->
           <nav class="mdl-navigation mdl-layout--large-screen-only">
             <?php
@@ -106,7 +108,10 @@
           <a class="mdl-navigation__link hvr-icon-forward" href="guide.php">Channel Guide</a>
           <?php
             if($_loggedIn){
-              ?> <span class="mdl-navigation__spacer">My channels:</span> <?php
+              ?>
+                <a class="mdl-navigation__link hvr-icon-forward" href="shares.php">Shared with me <?php echo ($inbox > 0) ? "(" . $inbox .")" : ""; ?></a>
+                <span class="mdl-navigation__spacer">My channels:</span>
+              <?php
               $queryUserSubscribed->bind_param("s", $_SESSION['userID']);
               $queryUserSubscribed->execute();
               $res = $queryUserSubscribed->get_result();
@@ -126,30 +131,30 @@
           <section class="section--center mdl-grid mdl-grid--no-spacing">
             <?php
             if(!$_posting){
-              if(isset($row)){
+              if(isset($rowPost)){
                 echo "<div class=\"mdl-card mdl-cell mdl-cell--12-col mdl-shadow--2dp post-card\">
                         <div class=\"post-card-text mdl-card__supporting-text\">"
-                          . htmlentities($row['message']) .
+                          . htmlentities($rowPost['message']) .
                         "</div>
                         <div class=\"mdl-card__actions\">
                           <div class=\"likes-container\">
-                            <i class=\"fa fa-heart likes-heart " . (($row['likes']) ? "heart-red":"heart-gray") . "\"
-                              aria-hidden=\"true\" onclick=\"likes(this," . $row['id'] . "," . $row['likes'] . ")\"></i>
-                            <span id=\"count" . $row['id'] . "\">" . $row['total'] .
+                            <i class=\"fa fa-heart likes-heart " . (($rowPost['likes']) ? "heart-red":"heart-gray") . "\"
+                              aria-hidden=\"true\" onclick=\"likes(this," . $rowPost['id'] . "," . $rowPost['likes'] . ")\"></i>
+                            <span id=\"count" . $rowPost['id'] . "\">" . $rowPost['total'] .
                             "</span>
                           </div>
                           <div class=\"author-tag\">
                             by
                             <a class=\"hvr-underline-reveal author-name\" href=\"user.php?user="
-                              . htmlentities($row['username']) . "\">"
-                              . htmlentities($row['username']) .
+                              . htmlentities($rowPost['username']) . "\">"
+                              . htmlentities($rowPost['username']) .
                             "</a>
                             on "
-                            . $row['timestamp'] .
+                            . $rowPost['timestamp'] .
                             " | posted in
                             <a class=\"hvr-underline-reveal author-name\" href=\"channel.php?ch="
-                              . $row['name'] . "\">"
-                              . $row['name'] .
+                              . $rowPost['name'] . "\">"
+                              . $rowPost['name'] .
                             "</a>
                           </div>
                         </div>
