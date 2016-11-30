@@ -6,7 +6,8 @@
 
   if(!empty($_POST['chName']) && $_loggedIn){
     $new_channel = true;
-    $insertChannel->bind_param("ss", htmlentities($_POST['chName']), $userId);
+    $default = $userId == 1;
+    $insertChannel->bind_param("sss", htmlentities($_POST['chName']), $userId, $default);
     if($insertChannel->execute()){
       $newCh_id = $mysqli->query("SELECT LAST_INSERT_ID() AS id;")->fetch_assoc()['id'];
       $insertSubscription->bind_param("ss", $userId, $newCh_id);

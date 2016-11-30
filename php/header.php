@@ -68,7 +68,7 @@
   );
 
   $insertChannel = $mysqli->prepare(
-  "INSERT INTO CHANNELS (name, owner, is_default) values (?,?,0)"
+  "INSERT INTO CHANNELS (name, owner, is_default) values (?,?,?)"
   );
 
   //LOGIN CHECKING / CREATION *************************************************
