@@ -1,5 +1,6 @@
 <?php
   include'php/header.php';
+  include 'php/lib_autolink.php';
  ?>
 <!doctype html>
 <html lang="en">
@@ -125,7 +126,7 @@
                         }
                       ?>
                     </h4>
-                    <?php echo nl2br(htmlentities($row['message'])) ?>
+                    <?php echo autolink(nl2br(htmlentities($row['message'])), 'target="_blank"') ?>
                   </div>
                   <div class="mdl-card__actions">
                     <div class="author-tag">

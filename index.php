@@ -1,5 +1,6 @@
 <?php
-  include'php/header.php';
+  include 'php/header.php';
+  include 'php/lib_autolink.php';
  ?>
 <!doctype html>
 <html lang="en">
@@ -59,35 +60,38 @@
       }
     ?>
   </head>
+
   <body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
-    <dialog class="mdl-dialog">
-      <h5 class="mdl-dialog__title">Share post</h5>
-      <div class="mdl-dialog__content">
-        <form action="#">
-          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-            <input class="mdl-textfield__input" type="text" id="share-with">
-            <label class="mdl-textfield__label" for="share-with">Share with...</label>
-          </div>
-          <div class="mdl-textfield mdl-js-textfield">
-            <textarea class="mdl-textfield__input" type="text" rows= "2" id="share-with-message" ></textarea>
-            <label class="mdl-textfield__label" for="share-with-message">Message...</label>
-          </div>
-        </form>
-        Sharing:
-        <div class="" id="post-to-share"></div>
-        <div class="error" id="share-error"></div>
-      </div>
-      <div class="mdl-dialog__actions">
-        <button type="button" class="mdl-button send">Share</button>
-        <button type="button" class="mdl-button close">Cancel</button>
-      </div>
-    </dialog>
-    <script>
-      var dialog = document.querySelector('dialog');
-      if (! dialog.showModal) {
-        dialogPolyfill.registerDialog(dialog);
-      }
-    </script>
+    <?php if($_loggedIn){ ?>
+      <dialog class="mdl-dialog">
+        <h5 class="mdl-dialog__title">Share post</h5>
+        <div class="mdl-dialog__content">
+          <form action="#">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+              <input class="mdl-textfield__input" type="text" id="share-with">
+              <label class="mdl-textfield__label" for="share-with">Share with...</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield">
+              <textarea class="mdl-textfield__input" type="text" rows= "2" id="share-with-message" ></textarea>
+              <label class="mdl-textfield__label" for="share-with-message">Message...</label>
+            </div>
+          </form>
+          Sharing:
+          <div class="" id="post-to-share"></div>
+          <div class="error" id="share-error"></div>
+        </div>
+        <div class="mdl-dialog__actions">
+          <button type="button" class="mdl-button send">Share</button>
+          <button type="button" class="mdl-button close">Cancel</button>
+        </div>
+      </dialog>
+      <script>
+        var dialog = document.querySelector('dialog');
+        if (! dialog.showModal) {
+          dialogPolyfill.registerDialog(dialog);
+        }
+      </script>
+    <?php } ?>
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
       <header class="mdl-layout__header scroll">
         <div class="mdl-layout__header-row">
@@ -150,7 +154,7 @@
               <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp" id="post<?php echo $row['id']?>">
                 <div class="mdl-card mdl-cell mdl-cell--12-col">
                   <div class="mdl-card__supporting-text post-card-text" id="content<?php echo $row['id']?>">
-                    <?php echo nl2br(htmlentities($row['message'])) ?>
+                    <?php echo autolink(nl2br(htmlentities($row['message'])), 'target="_blank"') ?>
                   </div>
                   <div class="mdl-card__actions">
                     <div class="likes-container">
@@ -179,12 +183,16 @@
                 <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right" for="opt<?php echo $row['id']?>">
                   <?php
                     if($row['owner'] == $userId){
-                     ?>
+                      ?>
                         <li class="mdl-menu__item" onclick="deletePost(this,<?php echo $row['id']?>)">Delete</li>
                       <?php
                     }
+                    if($_loggedIn){
+                      ?>
+                        <li class="mdl-menu__item hvr-icon-float-away share" onclick="openShareDialogue(<?php echo $row['id']?>)">Share</li>
+                      <?php
+                    }
                   ?>
-                  <li class="mdl-menu__item hvr-icon-float-away share" onclick="openShareDialogue(<?php echo $row['id']?>)">Share</li>
                 </ul>
               </section>
             <?php
@@ -194,6 +202,6 @@
       </main>
     </div>
     <script src="https://code.getmdl.io/1.2.1/material.min.js"></script>
-    <script src="js/share.js"></script>
+    <?php if($_loggedIn) { ?><script src="js/share.js"></script><?php } ?>
   </body>
 </html>
