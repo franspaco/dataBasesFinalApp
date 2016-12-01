@@ -2,8 +2,10 @@
   include 'php/header.php';
   include 'php/lib_autolink.php';
   echo password_hash("123456",PASSWORD_DEFAULT);
+
+
   $str = "Hey there http://google.com";
-  echo "String:<br>";
+  echo "<br><br>String:<br>";
   echo $str;
   echo "<br>With links<br>";
   echo autolink($str);
