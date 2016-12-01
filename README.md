@@ -20,8 +20,17 @@ mysqlpass = "contraseña"
 mysqlDB   = "nombre de base de datos"
 ```
 
-5. Crear un usuario ADMIN en la página de registro (register.php) desde el explorador, es importante que sea el primer usuario dado que el id '1' está ligado con el administrador.
+5. Crear un usuario ADMIN en la página de registro (register.php) desde el explorador, es importante que sea el primer usuario dado que el id '1' está ligado con el administrador. *
 
 6. Ir a la guia y crear canales default con el boton "new". Todos los canales que cree el admin serán default, por tanto se despliegan a usuarios sin sesión y se autosuscribe a ellos a todos los usuarios nuevos.
 
 7. Hacer posts!
+
+-----
+###Notas:
+
+Si no fuera posible creal al usuario admin por a través de la aplicación puede crearse manualmente con el comando:
+```sql
+INSERT INTO USERS (username, email, password) values ('admin', 'admin@localhost', <contraseña> );
+```
+Donde `<contraseña>` debe ser un hash. Este puede generarse con la función password_hash() que puede encontrarse en test.php donde se puede editar para obtener el hash de la contraseña deseada al cargar el archivo a través del servidor. No se recomienda utilizar este método.
